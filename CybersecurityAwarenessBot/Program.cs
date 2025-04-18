@@ -17,11 +17,15 @@
 // C# Dictionaries Guide - https://www.youtube.com/watch?v=R94JHIXdTk0
 // C# XML Documentation Guide - https://www.youtube.com/watch?v=z448dPJNXNs
 // AI Assistant - https://chatgpt.com/
+// C# Soundplayer Class - https://learn.microsoft.com/en-us/dotnet/api/system.media.soundplayer?view=windowsdesktop-9.0
+// Path.Combine Method - https://learn.microsoft.com/en-us/dotnet/api/system.io.path.combine?view=net-9.0
+// Where I got my Text-to-speech from - https://console.cloud.google.com/speech/overview?project=noble-freehold-457120-s5
 
 using System;
 using CybersecurityAwarenessBot.Core;
 using CybersecurityAwarenessBot.UI;
 using CybersecurityAwarenessBot.Data;
+using CybersecurityAwarenessBot.Audio;
 
 namespace CybersecurityAwarenessBot
 {
@@ -40,9 +44,10 @@ namespace CybersecurityAwarenessBot
                 // This creates the component instances
                 UserInterface ui = new UserInterface();
                 ResponseDatabase responseDb = new ResponseDatabase();
+                AudioManager audioManager = new AudioManager();
                 
                 // This creates the chatbot engine with dependencies
-                ChatbotEngine chatbot = new ChatbotEngine(ui, responseDb);
+                ChatbotEngine chatbot = new ChatbotEngine(ui, responseDb, audioManager);
                 
                 // This starts the chatbot
                 chatbot.Start();

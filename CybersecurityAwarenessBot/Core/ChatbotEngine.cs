@@ -1,6 +1,7 @@
 using System;
 using CybersecurityAwarenessBot.UI;
 using CybersecurityAwarenessBot.Data;
+using CybersecurityAwarenessBot.Audio;
 
 namespace CybersecurityAwarenessBot.Core
 {
@@ -12,6 +13,7 @@ namespace CybersecurityAwarenessBot.Core
         // This stores references to the dependent components
         private readonly UserInterface _ui;
         private readonly ResponseDatabase _responseDb;
+        private readonly AudioManager _audioManager;
         
         // This keeps track of the user's name
         private string _userName;
@@ -21,11 +23,13 @@ namespace CybersecurityAwarenessBot.Core
         /// </summary>
         /// <param name="ui">User interface component</param>
         /// <param name="responseDb">Response database component</param>
-        public ChatbotEngine(UserInterface ui, ResponseDatabase responseDb)
+        /// <param name="audioManager">Audio manager component</param>
+        public ChatbotEngine(UserInterface ui, ResponseDatabase responseDb, AudioManager audioManager)
         {
             // This sets up the component references
             _ui = ui ?? throw new ArgumentNullException(nameof(ui));
             _responseDb = responseDb ?? throw new ArgumentNullException(nameof(responseDb));
+            _audioManager = audioManager ?? throw new ArgumentNullException(nameof(audioManager));
         }
         
         /// <summary>
@@ -41,8 +45,8 @@ namespace CybersecurityAwarenessBot.Core
                 // This displays the welcome logo
                 _ui.DisplayLogo();
                 
-                // This displays a simple welcome message (replacing audio greeting)
-                Console.WriteLine("Welcome to the Cybersecurity Awareness Chatbot!");
+                // This plays the voice greeting (with fallback to text if audio fails)
+                _audioManager.PlayVoiceGreeting();
                 
                 // This gets the user's name
                 GetUserName();
