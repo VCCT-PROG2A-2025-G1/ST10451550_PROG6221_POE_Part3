@@ -20,6 +20,7 @@
 // C# Soundplayer Class - https://learn.microsoft.com/en-us/dotnet/api/system.media.soundplayer?view=windowsdesktop-9.0
 // Path.Combine Method - https://learn.microsoft.com/en-us/dotnet/api/system.io.path.combine?view=net-9.0
 // Where I got my Text-to-speech from - https://console.cloud.google.com/speech/overview?project=noble-freehold-457120-s5
+// Thread.Sleep Method - https://learn.microsoft.com/en-us/dotnet/api/system.threading.thread.sleep?view=net-9.0
 
 using System;
 using CybersecurityAwarenessBot.Core;

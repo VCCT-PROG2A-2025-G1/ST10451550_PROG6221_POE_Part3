@@ -18,6 +18,12 @@ namespace CybersecurityAwarenessBot.Core
         // This keeps track of the user's name
         private string _userName;
         
+        // This defines available topics for the help menu
+        private readonly string[] _availableTopics = {
+            "passwords", "phishing", "malware", "social engineering", 
+            "data protection", "public wifi", "updates", "backup", "2fa"
+        };
+        
         /// <summary>
         /// Initializes a new instance of the ChatbotEngine class
         /// </summary>
@@ -53,6 +59,10 @@ namespace CybersecurityAwarenessBot.Core
                 
                 // This shows the welcome message
                 _ui.DisplayWelcomeMessage(_userName);
+                _ui.DisplayDivider(ConsoleColor.Cyan);
+                
+                // This displays initial instructions
+                _ui.DisplayTextInstantly("Type 'help' to see available topics, or ask me about cybersecurity.", ConsoleColor.Yellow);
                 
                 // This runs the main conversation loop
                 RunConversationLoop();
@@ -103,11 +113,19 @@ namespace CybersecurityAwarenessBot.Core
                     _ui.DisplayGoodbyeMessage(_userName);
                     exitRequested = true;
                 }
+                // This displays the help menu if requested
+                else if (userInput.ToLower() == "help" || userInput.ToLower() == "topics")
+                {
+                    _ui.DisplayHelpMenu(_availableTopics);
+                }
                 else
                 {
                     // This processes the input and displays the response
                     string response = _responseDb.GetResponse(userInput, _userName);
                     _ui.DisplayColoredText(response, ConsoleColor.White);
+                    
+                    // This adds a divider after each response for better readability
+                    _ui.DisplayDivider(ConsoleColor.Cyan);
                 }
             }
         }
