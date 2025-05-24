@@ -16,8 +16,9 @@ This chatbot provides information on various cybersecurity topics, including phi
 1. Run the application
 2. Enter your name when prompted
 3. Ask questions about cybersecurity topics
-4. Type 'help' to see available topics
-5. Type 'exit' or 'quit' to end the conversation
+4. Experience varied responses for engaging conversations
+5. Type 'help' to see available topics
+6. Type 'exit' or 'quit' to end the conversation
 
 ## Technical Details
 - Built in C# as a console application
