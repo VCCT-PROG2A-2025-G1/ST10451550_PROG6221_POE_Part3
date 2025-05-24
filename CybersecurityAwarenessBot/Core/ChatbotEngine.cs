@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CybersecurityAwarenessBot.UI;
 using CybersecurityAwarenessBot.Data;
 using CybersecurityAwarenessBot.Audio;
@@ -17,6 +18,12 @@ namespace CybersecurityAwarenessBot.Core
         
         // This keeps track of the user's name
         private string _userName;
+        
+        // This tracks the current conversation topic
+        private string _currentTopic = "";
+        
+        // This tracks the last follow-up question asked
+        private string _lastFollowUpQuestion = "";
         
         // This defines available topics for the help menu
         private readonly string[] _availableTopics = {
@@ -97,15 +104,16 @@ namespace CybersecurityAwarenessBot.Core
         private void RunConversationLoop()
         {
             bool exitRequested = false;
+            bool waitingForFollowUpResponse = false;
             
             // This loops until the user requests to exit
             while (!exitRequested)
             {
+                // This creates a context-aware prompt based on current topic
+                string prompt = GetContextAwarePrompt(waitingForFollowUpResponse || _responseDb.IsInPostFollowUpState());
+                
                 // This gets the user's input
-                string userInput = _ui.GetUserInput(
-                    "What would you like to know about cybersecurity? (Type 'exit' to quit)", 
-                    ConsoleColor.Yellow
-                );
+                string userInput = _ui.GetUserInput(prompt, ConsoleColor.Yellow);
                 
                 // This checks if the user wants to exit
                 if (userInput.ToLower() == "exit" || userInput.ToLower() == "quit")
@@ -117,17 +125,119 @@ namespace CybersecurityAwarenessBot.Core
                 else if (userInput.ToLower() == "help" || userInput.ToLower() == "topics")
                 {
                     _ui.DisplayHelpMenu(_availableTopics);
+                    // This resets the current topic when user asks for help
+                    _currentTopic = "";
+                    _lastFollowUpQuestion = "";
+                    _responseDb.ResetPostFollowUpState();
+                    waitingForFollowUpResponse = false;
                 }
                 else
                 {
-                    // This processes the input and displays the response
-                    string response = _responseDb.GetResponse(userInput, _userName);
+                    // This processes the input and displays the response with follow-up context
+                    string response = _responseDb.GetResponse(userInput, _userName, _currentTopic, _lastFollowUpQuestion);
+                    
                     _ui.DisplayColoredText(response, ConsoleColor.White);
+                    
+                    // This checks if we need to update the prompt based on the response type
+                    if (response.Contains("Type 'help' to see available topics"))
+                    {
+                        // This resets the conversation to the default state after completing a post-follow-up flow
+                        _currentTopic = "";
+                        _lastFollowUpQuestion = "";
+                        waitingForFollowUpResponse = false;
+                    }
+                    else
+                    {
+                        // This checks if the response was to a specific follow-up question
+                        bool wasFollowUpResponse = !string.IsNullOrEmpty(_lastFollowUpQuestion) && 
+                            (userInput.Contains("yes") || userInput.Contains("sure") || userInput.Contains("ok") || 
+                             userInput.Contains("please") || userInput.Contains("tell me"));
+                        
+                        // This updates the current topic based on the input
+                        UpdateCurrentTopic(userInput);
+                        
+                        // This updates the last follow-up question
+                        _lastFollowUpQuestion = _responseDb.GetLastFollowUpQuestion();
+                        
+                        // This checks if we're waiting for a follow-up response
+                        waitingForFollowUpResponse = !string.IsNullOrEmpty(_lastFollowUpQuestion);
+                        
+                        // This resets the follow-up question if we just answered one
+                        if (wasFollowUpResponse && !_responseDb.IsInPostFollowUpState())
+                        {
+                            _lastFollowUpQuestion = "";
+                            waitingForFollowUpResponse = false;
+                        }
+                    }
                     
                     // This adds a divider after each response for better readability
                     _ui.DisplayDivider(ConsoleColor.Cyan);
                 }
             }
+        }
+        
+        /// <summary>
+        /// Creates a context-aware prompt based on the current topic
+        /// </summary>
+        /// <param name="isInFollowUpFlow">Whether we're in a follow-up question flow</param>
+        /// <returns>A prompt that reflects the current conversation context</returns>
+        private string GetContextAwarePrompt(bool isInFollowUpFlow = false)
+        {
+            // This returns a blank prompt when we're in a follow-up flow to avoid confusion
+            if (isInFollowUpFlow)
+            {
+                return "";
+            }
+            
+            if (string.IsNullOrEmpty(_currentTopic))
+            {
+                return "What would you like to know about cybersecurity? (Type 'exit' to quit)";
+            }
+            else
+            {
+                return $"What would you like to know about {_currentTopic}? (Type 'help' for other topics, 'exit' to quit)";
+            }
+        }
+        
+        /// <summary>
+        /// Updates the current topic based on user input
+        /// </summary>
+        /// <param name="userInput">The user's input</param>
+        private void UpdateCurrentTopic(string userInput)
+        {
+            // This normalizes the input to lowercase
+            string input = userInput.ToLower();
+            
+            // This resets the topic if the user indicates they want to change topics
+            if (input.Contains("different topic") || input.Contains("another topic") || 
+                input.Contains("something else") || input.Contains("change topic"))
+            {
+                _currentTopic = "";
+                _lastFollowUpQuestion = "";
+                _responseDb.ResetPostFollowUpState();
+                return;
+            }
+            
+            // This checks if the input contains a topic keyword
+            foreach (string topic in _availableTopics)
+            {
+                // This normalizes the topic for comparison (e.g., "passwords" to "password")
+                string normalizedTopic = topic;
+                if (topic == "passwords") normalizedTopic = "password";
+                if (topic == "updates") normalizedTopic = "update";
+                
+                if (input.Contains(normalizedTopic))
+                {
+                    _currentTopic = normalizedTopic;
+                    // This resets the follow-up question when switching topics
+                    _lastFollowUpQuestion = "";
+                    _responseDb.ResetPostFollowUpState();
+                    return;
+                }
+            }
+            
+            // This keeps the existing topic if no new topic is detected and we're not in a topic switch request
+            // No change to _currentTopic if we don't detect a new topic
         }
     }
 } 
