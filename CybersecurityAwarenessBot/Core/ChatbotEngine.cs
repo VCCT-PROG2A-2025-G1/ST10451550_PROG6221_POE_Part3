@@ -89,13 +89,32 @@ namespace CybersecurityAwarenessBot.Core
             // This gets the user name with validation
             string name = _ui.GetUserInput("Please enter your name:", ConsoleColor.Yellow);
             
-            // This ensures the name is not empty
-            while (string.IsNullOrWhiteSpace(name))
+            // This ensures the name is not empty and contains only letters
+            while (string.IsNullOrWhiteSpace(name) || !IsValidName(name))
             {
-                name = _ui.GetUserInput("Please enter a valid name:", ConsoleColor.Red);
+                name = _ui.GetUserInput("Please enter a valid name (letters only):", ConsoleColor.Red);
             }
             
             _userName = name;
+        }
+        
+        /// <summary>
+        /// Validates that a name contains only letters
+        /// </summary>
+        /// <param name="name">The name to validate</param>
+        /// <returns>True if the name contains only letters, false otherwise</returns>
+        private bool IsValidName(string name)
+        {
+            // This checks if the name contains only letters
+            foreach (char c in name)
+            {
+                if (!char.IsLetter(c) && !char.IsWhiteSpace(c))
+                {
+                    return false;
+                }
+            }
+            
+            return true;
         }
         
         /// <summary>
@@ -129,6 +148,7 @@ namespace CybersecurityAwarenessBot.Core
                     _currentTopic = "";
                     _lastFollowUpQuestion = "";
                     _responseDb.ResetPostFollowUpState();
+                    _responseDb.ClearTopicHistory(); // Clear topic history when help is requested
                     waitingForFollowUpResponse = false;
                 }
                 else
@@ -191,11 +211,11 @@ namespace CybersecurityAwarenessBot.Core
             
             if (string.IsNullOrEmpty(_currentTopic))
             {
-                return "What would you like to know about cybersecurity? (Type 'exit' to quit)";
+                return "What would you like to learn about cybersecurity? (Type 'help' for topics or 'exit' to quit)";
             }
             else
             {
-                return $"What would you like to know about {_currentTopic}? (Type 'help' for other topics, 'exit' to quit)";
+                return $"Would you like to know more about {_currentTopic}? (Type 'help' for other topics, 'exit' to quit)";
             }
         }
         
@@ -215,6 +235,7 @@ namespace CybersecurityAwarenessBot.Core
                 _currentTopic = "";
                 _lastFollowUpQuestion = "";
                 _responseDb.ResetPostFollowUpState();
+                _responseDb.ClearTopicHistory(); // Clear topic history when explicitly changing topics
                 return;
             }
             

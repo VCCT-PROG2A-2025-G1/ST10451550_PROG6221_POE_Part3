@@ -35,6 +35,15 @@ namespace CybersecurityAwarenessBot.Data
         // This stores memory reference sentences to connect topics
         private List<string> _memoryReferences = new List<string>();
         
+        // This stores emotion keywords for sentiment detection
+        private Dictionary<string, List<string>> _emotionKeywords;
+        
+        // This stores emotion response templates for each emotion category
+        private Dictionary<string, List<string>> _emotionResponses;
+        
+        // This tracks the last detected emotion
+        private string _lastDetectedEmotion = "";
+        
         /// <summary>
         /// Initializes a new instance of the ResponseDatabase class
         /// </summary>
@@ -109,7 +118,7 @@ namespace CybersecurityAwarenessBot.Data
             _followUpQuestions = new Dictionary<string, List<string>>
             {
                 { "password", new List<string> {
-                    "Would you like to know how to create a strong password?",
+                    "Would you like to know how to create strong passwords?",
                     "Would you like to learn about password managers?",
                     "Would you like to know about common password mistakes to avoid?"
                 }},
@@ -167,7 +176,7 @@ namespace CybersecurityAwarenessBot.Data
             _detailedResponses = new Dictionary<string, Dictionary<string, string>>
             {
                 { "password", new Dictionary<string, string> {
-                    { "create", "To create a strong password: 1) Use at least 12 characters 2) Mix uppercase, lowercase, numbers and symbols 3) Avoid personal info like birthdays 4) Don't use dictionary words 5) Consider using a passphrase of random words with numbers and symbols mixed in" },
+                    { "create", "To create strong passwords: 1) Use at least 12 characters 2) Mix uppercase, lowercase, numbers and symbols 3) Avoid personal info like birthdays 4) Don't use dictionary words 5) Consider using passphrases of random words with numbers and symbols mixed in" },
                     { "manager", "Password managers like LastPass, Bitwarden, or 1Password securely store all your passwords in an encrypted vault. You only need to remember one master password. They can generate strong unique passwords for each site and auto-fill them when needed." },
                     { "mistakes", "Common password mistakes include: 1) Reusing passwords across multiple sites 2) Using simple, easy-to-guess passwords 3) Writing passwords on sticky notes 4) Sharing passwords with others 5) Not changing passwords after a breach 6) Using personal information like birthdates" }
                 }},
@@ -189,8 +198,8 @@ namespace CybersecurityAwarenessBot.Data
             _followUpResponses = new Dictionary<string, Dictionary<string, string>>
             {
                 { "password", new Dictionary<string, string> {
-                    { "Would you like to know how to create a strong password?", 
-                      "To create a strong password: 1) Use at least 12-16 characters 2) Combine uppercase letters, lowercase letters, numbers, and symbols 3) Avoid sequential patterns and repeated characters 4) Don't use personal information 5) Consider using a passphrase (a series of random words with numbers and symbols). For example, 'Horse-Battery42-Staple!' is much stronger than 'Password123'." },
+                    { "Would you like to know how to create strong passwords?", 
+                      "To create strong passwords: 1) Use at least 12-16 characters 2) Combine uppercase letters, lowercase letters, numbers, and symbols 3) Avoid sequential patterns and repeated characters 4) Don't use personal information 5) Consider using passphrases (a series of random words with numbers and symbols). For example, 'Horse-Battery42-Staple!' is much stronger than 'Password123'." },
                     
                     { "Would you like to learn about password managers?", 
                       "Password managers are specialized applications that securely store all your passwords in an encrypted vault. The best ones (like LastPass, Bitwarden, 1Password) include features like: 1) Strong password generation 2) Auto-filling credentials 3) Secure sharing 4) Two-factor authentication 5) Security alerts for compromised passwords. Most offer free basic plans and premium features for a small subscription fee. They work across devices and browsers, so your passwords are always available but secure." },
@@ -297,6 +306,43 @@ namespace CybersecurityAwarenessBot.Data
                 "Building on your {0} question, here's information about {1}.",
                 "Since you asked about {0} earlier, you'll find {1} equally important!"
             };
+            
+            // Initialize emotion keywords for sentiment detection
+            _emotionKeywords = new Dictionary<string, List<string>>
+            {
+                { "worried", new List<string> { "worried", "scared", "afraid", "concerned", "anxious", "fear" } },
+                { "frustrated", new List<string> { "frustrated", "annoyed", "difficult", "hard", "confusing", "annoying" } },
+                { "confused", new List<string> { "confused", "don't understand", "unclear", "lost", "stuck", "complex" } },
+                { "excited", new List<string> { "excited", "interested", "great", "awesome", "cool", "amazing" } }
+            };
+            
+            // Initialize emotion response templates
+            _emotionResponses = new Dictionary<string, List<string>>
+            {
+                { "worried", new List<string> {
+                    "You're absolutely right to be concerned about {0}!",
+                    "I understand your worry about {0}!",
+                    "Your concern about {0} is completely valid!"
+                }},
+                
+                { "frustrated", new List<string> {
+                    "I know {0} can be frustrating to deal with!",
+                    "Don't worry, {0} doesn't have to be so difficult!",
+                    "{0} can definitely be annoying, but I can help!"
+                }},
+                
+                { "confused", new List<string> {
+                    "No problem! {0} can seem confusing at first!",
+                    "Don't worry, I'll explain {0} clearly for you!",
+                    "{0} is easier to understand than it seems!"
+                }},
+                
+                { "excited", new List<string> {
+                    "I love your enthusiasm about {0}!",
+                    "Great to see you're interested in {0}!",
+                    "Awesome that you want to learn about {0}!"
+                }}
+            };
         }
         
         /// <summary>
@@ -311,6 +357,9 @@ namespace CybersecurityAwarenessBot.Data
         {
             // This converts the input to lowercase for case-insensitive matching
             userInput = userInput.ToLower();
+            
+            // This detects emotions in the user input
+            string detectedEmotion = DetectEmotion(userInput);
             
             // This handles post-follow-up state when user says yes/no to "Would you like to learn more about [topic]?"
             if (_isPostFollowUpState)
@@ -339,6 +388,13 @@ namespace CybersecurityAwarenessBot.Data
             // This saves the last follow-up question for future reference
             _lastFollowUpQuestion = lastFollowUp;
             
+            // This handles direct "no" responses to any follow-up question
+            if (!string.IsNullOrEmpty(lastFollowUp) && 
+               (userInput.Contains("no") || userInput.Contains("not") || userInput.Contains("different")))
+            {
+                return $"What cybersecurity topic would you like to learn about instead, {userName}?";
+            }
+            
             // This checks if this is a direct response to a follow-up question
             if (!string.IsNullOrEmpty(lastFollowUp) && 
                 (userInput.Contains("yes") || userInput.Contains("sure") || userInput.Contains("ok") || 
@@ -353,7 +409,14 @@ namespace CybersecurityAwarenessBot.Data
                     // This sets the post-follow-up state so we can ask if they want more info on this topic
                     _isPostFollowUpState = true;
                     
-                    return $"{userName}, {specificAnswer}\n\nWould you like to learn more about {currentTopic}?";
+                    // This handles the special case for password topic - use plural form
+                    string topicText = currentTopic;
+                    if (currentTopic == "password")
+                    {
+                        topicText = "passwords";
+                    }
+                    
+                    return $"{userName}, {specificAnswer}\n\nWould you like to learn more about {topicText}?";
                 }
             }
             
@@ -368,7 +431,15 @@ namespace CybersecurityAwarenessBot.Data
                         if (userInput.Contains(subTopic))
                         {
                             string detailedResponse = _detailedResponses[currentTopic][subTopic];
-                            return $"{userName}, {detailedResponse}. Is there something else about {currentTopic} you'd like to know?";
+                            
+                            // This handles the special case for password topic - use plural form
+                            string topicText = currentTopic;
+                            if (currentTopic == "password")
+                            {
+                                topicText = "passwords";
+                            }
+                            
+                            return $"{userName}, {detailedResponse}. Is there something else about {topicText} you'd like to know?";
                         }
                     }
                 }
@@ -389,8 +460,9 @@ namespace CybersecurityAwarenessBot.Data
                     return GetTopicResponse(currentTopic, userName, false);
                 }
                 
-                // This handles negative follow-up responses
-                if (userInput.Contains("no") || userInput.Contains("not") || userInput.Contains("different"))
+                // This handles negative follow-up responses when no specific follow-up question was asked
+                if ((userInput.Contains("no") || userInput.Contains("not") || userInput.Contains("different")) &&
+                    string.IsNullOrEmpty(lastFollowUp))
                 {
                     return $"What cybersecurity topic would you like to learn about instead, {userName}?";
                 }
@@ -463,23 +535,44 @@ namespace CybersecurityAwarenessBot.Data
             // This creates a transition phrase for topic switches
             string transition = isTopicSwitch ? $"Switching to {topic}. " : "";
             
+            // This gets an emotion response if an emotion was detected
+            string emotionResponse = GetEmotionResponse(_lastDetectedEmotion, topic);
+            
             // Create memory reference if this isn't the first topic
             string memoryReference = "";
-            if (topic != "help" && !_topicHistory.Contains(topic))
+            // Always add the current topic to history, even if discussed before
+            if (topic != "help")
             {
                 _topicHistory.Add(topic);
+                
+                // Limit history size to prevent excessive memory usage
+                if (_topicHistory.Count > 10)
+                {
+                    _topicHistory.RemoveAt(0); // Remove oldest topic
+                }
                 
                 // Add memory reference if this is at least the second topic
                 if (_topicHistory.Count >= 2)
                 {
                     string previousTopic = _topicHistory[_topicHistory.Count - 2];
-                    int memoryIndex = _random.Next(0, _memoryReferences.Count);
-                    memoryReference = string.Format(_memoryReferences[memoryIndex], previousTopic, topic) + " ";
+                    
+                    // Only add a memory reference if the current topic is different from the previous one
+                    // Compare the normalized forms to handle cases like "password" vs "passwords"
+                    if (FormatTopicForDisplay(previousTopic) != FormatTopicForDisplay(topic))
+                    {
+                        int memoryIndex = _random.Next(0, _memoryReferences.Count);
+                        
+                        // Format the topics for display (handle special cases like password→passwords)
+                        string displayPreviousTopic = FormatTopicForDisplay(previousTopic);
+                        string displayCurrentTopic = FormatTopicForDisplay(topic);
+                        
+                        memoryReference = string.Format(_memoryReferences[memoryIndex], displayPreviousTopic, displayCurrentTopic) + " ";
+                    }
                 }
             }
             
             // This combines the response with follow-up question
-            return $"{transition}{memoryReference}{userName}, {selectedResponse}\n\n{followUp}";
+            return $"{transition}{emotionResponse}{memoryReference}{userName}, {selectedResponse}\n\n{followUp}";
         }
         
         /// <summary>
@@ -532,6 +625,89 @@ namespace CybersecurityAwarenessBot.Data
         public void ClearTopicHistory()
         {
             _topicHistory.Clear();
+        }
+        
+        /// <summary>
+        /// Detects emotions in the user input
+        /// </summary>
+        /// <param name="userInput">The user's input</param>
+        /// <returns>The detected emotion or empty string if none detected</returns>
+        private string DetectEmotion(string userInput)
+        {
+            // This checks each emotion category for matching keywords
+            foreach (var emotion in _emotionKeywords.Keys)
+            {
+                foreach (var keyword in _emotionKeywords[emotion])
+                {
+                    // This checks if the keyword is in the user input
+                    if (userInput.Contains(keyword))
+                    {
+                        // This saves the detected emotion
+                        _lastDetectedEmotion = emotion;
+                        return emotion;
+                    }
+                }
+            }
+            
+            // This resets the last detected emotion if none found
+            _lastDetectedEmotion = "";
+            return "";
+        }
+        
+        /// <summary>
+        /// Gets an emotion response based on the detected emotion and topic
+        /// </summary>
+        /// <param name="emotion">The detected emotion</param>
+        /// <param name="topic">The current topic</param>
+        /// <returns>A formatted emotion response or empty string if no emotion detected</returns>
+        private string GetEmotionResponse(string emotion, string topic)
+        {
+            // This returns empty string if no emotion detected or no topic provided
+            if (string.IsNullOrEmpty(emotion) || string.IsNullOrEmpty(topic))
+            {
+                return "";
+            }
+            
+            // This checks if we have responses for this emotion
+            if (_emotionResponses.ContainsKey(emotion))
+            {
+                // This randomly selects one of the available emotion responses
+                int responseIndex = _random.Next(0, _emotionResponses[emotion].Count);
+                string selectedResponse = _emotionResponses[emotion][responseIndex];
+                
+                // This handles the special case for password topic - use plural form
+                string topicText = topic;
+                if (topic == "password")
+                {
+                    topicText = "passwords";
+                }
+                
+                // This formats the response with the current topic (using plural for passwords)
+                return string.Format(selectedResponse, topicText) + " ";
+            }
+            
+            return "";
+        }
+        
+        /// <summary>
+        /// Formats a topic for display, handling plural/singular forms consistently
+        /// </summary>
+        /// <param name="topic">The topic to format</param>
+        /// <returns>The formatted topic</returns>
+        private string FormatTopicForDisplay(string topic)
+        {
+            if (topic == "password")
+            {
+                return "passwords";
+            }
+            else if (topic == "help")
+            {
+                return "cybersecurity";
+            }
+            else
+            {
+                return topic;
+            }
         }
     }
 } 
