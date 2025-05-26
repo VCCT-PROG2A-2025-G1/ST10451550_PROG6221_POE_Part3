@@ -21,6 +21,12 @@
 // Path.Combine Method - https://learn.microsoft.com/en-us/dotnet/api/system.io.path.combine?view=net-9.0
 // Where I got my Text-to-speech from - https://console.cloud.google.com/speech/overview?project=noble-freehold-457120-s5
 // Thread.Sleep Method - https://learn.microsoft.com/en-us/dotnet/api/system.threading.thread.sleep?view=net-9.0
+// C# Dictionary Collections - https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2
+// List<T> Collections - https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1
+// C# Dictionary Collections - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/how-to-initialize-a-dictionary-with-a-collection-initializer
+// String Contains Method - https://learn.microsoft.com/en-us/dotnet/api/system.string.contains
+// C# Lists - https://www.geeksforgeeks.org/c-sharp-list-class/
+// Random Class - https://learn.microsoft.com/en-us/dotnet/api/system.random?view=net-9.0
 
 using System;
 using CybersecurityAwarenessBot.Core;
