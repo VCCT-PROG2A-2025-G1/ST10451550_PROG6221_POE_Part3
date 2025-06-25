@@ -28,6 +28,13 @@
 // C# Lists - https://www.geeksforgeeks.org/c-sharp-list-class/
 // Random Class - https://learn.microsoft.com/en-us/dotnet/api/system.random?view=net-9.0
 
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// This file contains the original console application entry point
+// It has been preserved for reference but is no longer used in the WPF version
+// The WPF application now starts through App.xaml and MainWindow.xaml
+
+/*
 using System;
 using CybersecurityAwarenessBot.Core;
 using CybersecurityAwarenessBot.UI;
@@ -37,12 +44,13 @@ using CybersecurityAwarenessBot.Audio;
 namespace CybersecurityAwarenessBot
 {
     /// <summary>
-    /// Entry point class for the Cybersecurity Awareness Chatbot
+    /// Original console entry point - preserved for reference
+    /// The application now starts as a WPF application through App.xaml
     /// </summary>
     class Program
     {
         /// <summary>
-        /// Main entry point for the application
+        /// Original console main method - no longer used
         /// </summary>
         static void Main(string[] args)
         {
@@ -73,3 +81,4 @@ namespace CybersecurityAwarenessBot
         }
     }
 }
+*/

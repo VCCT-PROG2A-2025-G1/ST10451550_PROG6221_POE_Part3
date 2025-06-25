@@ -12,7 +12,7 @@ namespace CybersecurityAwarenessBot.UI
         private const int TypeWriterDelayMs = 15;
         
         /// <summary>
-        /// Initializes the console interface settings
+        /// Initialises the console interface settings
         /// </summary>
         public void InitializeConsole()
         {
@@ -190,7 +190,7 @@ namespace CybersecurityAwarenessBot.UI
         /// <param name="userName">The user's name</param>
         public void DisplayWelcomeMessage(string userName)
         {
-            // This welcomes the user with a personalized message
+            // This welcomes the user with a personalised message
             Console.WriteLine();
             DisplayColoredText($"Hello, {userName}! I'm here to help you learn about cybersecurity.", ConsoleColor.Green);
         }

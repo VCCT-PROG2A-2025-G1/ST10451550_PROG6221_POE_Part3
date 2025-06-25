@@ -512,7 +512,7 @@ namespace CybersecurityAwarenessBot.Data
         /// Gets a response for a specific topic with optional follow-up question
         /// </summary>
         /// <param name="topic">The topic to get a response for</param>
-        /// <param name="userName">The user's name for personalization</param>
+        /// <param name="userName">The user's name for personalisation</param>
         /// <param name="isTopicSwitch">Whether this is a topic switch in conversation</param>
         /// <returns>A response with follow-up question</returns>
         private string GetTopicResponse(string topic, string userName, bool isTopicSwitch)
