@@ -234,13 +234,20 @@ namespace CybersecurityAwarenessBot
         {
             string lowerInput = input.ToLower();
             
+            // PHASE 3 FIX: Check if this input should be handled by the new action-based system
+            // This prevents the old system from interfering with the new smart task creation
+            if (ShouldUseActionBasedSystem(lowerInput))
+            {
+                return false; // Let the new system handle it
+            }
+            
             // This checks for natural language task creation
             if (TryParseTaskCreation(input))
             {
                 return true;
             }
             
-            // This checks for general task creation commands
+            // This checks for general task creation commands (only if not action-based)
             if (lowerInput.Contains("create task") || lowerInput.Contains("add task") || 
                 lowerInput.Contains("new task") || lowerInput.Contains("make task"))
             {
@@ -274,15 +281,33 @@ namespace CybersecurityAwarenessBot
                 return true;
             }
             
-            // This checks for reminder-related commands
-            if (lowerInput.Contains("remind me") || lowerInput.Contains("reminder"))
-            {
-                AppendToChatDisplay("Bot: I can help you set reminders! After creating a task, I'll ask if you want a reminder.", Brushes.Cyan);
-                AppendToChatDisplay("Bot: Try: 'Add task - Update antivirus software'", Brushes.Yellow);
-                return true;
-            }
-            
             return false;
+        }
+        
+        /// <summary>
+        /// Determines if input should use the new action-based system (PHASE 3 ENHANCEMENT)
+        /// </summary>
+        /// <param name="lowerInput">The user's input in lowercase</param>
+        /// <returns>True if the new action-based system should handle this input</returns>
+        private bool ShouldUseActionBasedSystem(string lowerInput)
+        {
+            // This defines action keywords that trigger the new system
+            var actionKeywords = new[] { "remind", "task", "create", "set", "schedule", "add" };
+            
+            // This defines topic keywords for cybersecurity tasks (PHASE 3 FIX: Consistent with ResponseDatabase)
+            var topicKeywords = new[] { "2fa", "two-factor", "backup", "password", "passwords", "malware", 
+                                       "updates", "antivirus", "virus", "security", "phishing", "wifi", "network" };
+            
+            // This checks if input has both action and topic keywords
+            bool hasActionKeyword = actionKeywords.Any(keyword => lowerInput.Contains(keyword));
+            bool hasTopicKeyword = topicKeywords.Any(keyword => lowerInput.Contains(keyword));
+            
+            // This also checks for quiz keywords that should use the new system
+            var quizKeywords = new[] { "quiz", "game", "test" };
+            bool hasQuizKeyword = quizKeywords.Any(keyword => lowerInput.Contains(keyword));
+            
+            // This returns true if it should use the new action-based system
+            return (hasActionKeyword && hasTopicKeyword) || hasQuizKeyword;
         }
         
         /// <summary>
@@ -485,24 +510,34 @@ namespace CybersecurityAwarenessBot
             // Section divider
             AppendToChatDisplayInstantly("─".PadRight(60, '─'), Brushes.DarkCyan);
             
-            AppendToChatDisplayInstantly("Bot: TASK ASSISTANT COMMANDS:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("Bot: 🎯 SMART TASK CREATION (NEW!):", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• 'Remind me to backup my files tomorrow'", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Create a task for 2fa in 3 days'", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Set a password task for next week'", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Schedule malware scan in 2 weeks'", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Add antivirus update task'", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("", Brushes.White);
+            AppendToChatDisplayInstantly("Bot: ⏰ TIME OPTIONS:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• today, tomorrow", Brushes.Orange);
+            AppendToChatDisplayInstantly("• in 1-6 days, in 1-4 weeks, in 1-6 months", Brushes.Orange);
+            AppendToChatDisplayInstantly("• Both numbers (in 3 days) and words (in three days) work!", Brushes.Orange);
+            
+            // Section divider
+            AppendToChatDisplayInstantly("─".PadRight(60, '─'), Brushes.DarkCyan);
+            
+            AppendToChatDisplayInstantly("Bot: 🧠 QUIZ & LEARNING:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• Type 'quiz', 'game', or 'test' to access the cybersecurity quiz", Brushes.Magenta);
+            AppendToChatDisplayInstantly("• 10 random questions covering all security topics", Brushes.Magenta);
+            
+            // Section divider
+            AppendToChatDisplayInstantly("─".PadRight(60, '─'), Brushes.DarkCyan);
+            
+            AppendToChatDisplayInstantly("Bot: TRADITIONAL TASK COMMANDS:", Brushes.Yellow);
             AppendToChatDisplayInstantly("• 'Add task - [task title]' - Create a new task", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Create task to [task description]' - Alternative creation", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Show my tasks' or 'List tasks' - View current tasks", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• After creating a task, I'll ask about reminders", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• Use the Edit button in the Task Assistant panel to modify tasks", Brushes.LightGreen);
-            AppendToChatDisplayInstantly("", Brushes.White);
-            AppendToChatDisplayInstantly("Bot: EXAMPLE TASK COMMANDS:", Brushes.Yellow);
-            AppendToChatDisplayInstantly("• 'Add task - Review privacy settings'", Brushes.White);
-            AppendToChatDisplayInstantly("• 'Add task - Enable two-factor authentication'", Brushes.White);
-            AppendToChatDisplayInstantly("• 'Add task - Update antivirus software'", Brushes.White);
-            AppendToChatDisplayInstantly("• 'Add task - Backup important files'", Brushes.White);
-            AppendToChatDisplayInstantly("", Brushes.White);
-            AppendToChatDisplayInstantly("Bot: REMINDER OPTIONS:", Brushes.Yellow);
-            AppendToChatDisplayInstantly("• 'Yes, remind me tomorrow'", Brushes.Orange);
-            AppendToChatDisplayInstantly("• 'Yes, remind me in 3 days'", Brushes.Orange);
-            AppendToChatDisplayInstantly("• 'Yes, remind me next week'", Brushes.Orange);
-            AppendToChatDisplayInstantly("• 'No thanks' (skip reminder)", Brushes.Orange);
             AppendToChatDisplayInstantly("", Brushes.White);
             AppendToChatDisplayInstantly("Bot: You can also use the Task Assistant panel on the right for a visual interface!", Brushes.Cyan);
             
@@ -970,8 +1005,6 @@ namespace CybersecurityAwarenessBot
             }
         }
         
-
-        
         /// <summary>
         /// Highlights answer buttons to show correct/incorrect responses
         /// </summary>
@@ -1009,8 +1042,6 @@ namespace CybersecurityAwarenessBot
                 button.IsEnabled = false;
             }
         }
-        
-
         
         /// <summary>
         /// Creates answer buttons dynamically
@@ -1143,6 +1174,47 @@ namespace CybersecurityAwarenessBot
             // This hides control buttons
             NextQuestionButton.Visibility = Visibility.Collapsed;
             ViewResultsButton.Visibility = Visibility.Collapsed;
+        }
+        
+        /// <summary>
+        /// Creates a task from action-based keyword detection (PHASE 3 ENHANCEMENT)
+        /// </summary>
+        /// <param name="title">The generated task title</param>
+        /// <param name="description">The generated task description</param>
+        /// <param name="reminderDate">The optional reminder date</param>
+        /// <param name="userName">The user's name for personalized feedback</param>
+        /// <returns>A response message for the user</returns>
+        public string CreateTaskFromActionKeywords(string title, string description, DateTime? reminderDate, string userName)
+        {
+            try
+            {
+                // This creates the new task with all provided details
+                var newTask = new CybersecurityTask(title, description, reminderDate);
+                _tasks.Add(newTask);
+                
+                // This prepares the response message
+                string response = $"Perfect! I've automatically created the task '{title}' for you.";
+                
+                // This adds reminder information if provided
+                if (reminderDate.HasValue)
+                {
+                    response += $" I've set a reminder for {reminderDate.Value:dddd, MMMM dd, yyyy}.";
+                }
+                else
+                {
+                    response += " No reminder was set, but you can add one later using the Task Assistant panel.";
+                }
+                
+                // This provides additional helpful information
+                response += " You can manage this task using the Task Assistant panel on the right.";
+                
+                return response;
+            }
+            catch (Exception ex)
+            {
+                // This handles any errors during task creation
+                return $"I'm sorry {userName}, I encountered an error while creating the task: {ex.Message}";
+            }
         }
         
         #endregion

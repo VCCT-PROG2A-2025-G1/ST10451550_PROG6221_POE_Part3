@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CybersecurityAwarenessBot.Data
 {
@@ -346,17 +347,34 @@ namespace CybersecurityAwarenessBot.Data
         }
         
         /// <summary>
-        /// Gets a response for the given user input
+        /// Gets a response for user input with enhanced action-based keyword detection
         /// </summary>
         /// <param name="userInput">The user's input</param>
-        /// <param name="userName">The user's name for personalization</param>
-        /// <param name="currentTopic">The current topic being discussed (if any)</param>
-        /// <param name="lastFollowUp">The last follow-up question asked by the bot (if any)</param>
-        /// <returns>A cybersecurity response based on the input and context</returns>
-        public string GetResponse(string userInput, string userName, string currentTopic = "", string lastFollowUp = "")
+        /// <param name="userName">The user's name</param>
+        /// <param name="currentTopic">The current conversation topic</param>
+        /// <param name="lastFollowUp">The last follow-up question asked</param>
+        /// <param name="taskCreationCallback">Optional callback for task creation</param>
+        /// <returns>The chatbot's response</returns>
+        public string GetResponse(string userInput, string userName, string currentTopic = "", string lastFollowUp = "", 
+            Func<string, string, DateTime?, string> taskCreationCallback = null)
         {
             // This converts the input to lowercase for case-insensitive matching
+            string originalInput = userInput;
             userInput = userInput.ToLower();
+            
+            // PHASE 3 ENHANCEMENT: This checks for action-based task creation first (highest priority)
+            var actionTaskResult = ProcessActionBasedTaskCreation(userInput, userName, taskCreationCallback);
+            if (!string.IsNullOrEmpty(actionTaskResult))
+            {
+                return actionTaskResult;
+            }
+            
+            // PHASE 3 ENHANCEMENT: This checks for quiz keywords
+            var quizResult = ProcessQuizKeywords(userInput, userName);
+            if (!string.IsNullOrEmpty(quizResult))
+            {
+                return quizResult;
+            }
             
             // This detects emotions in the user input
             string detectedEmotion = DetectEmotion(userInput);
@@ -708,6 +726,203 @@ namespace CybersecurityAwarenessBot.Data
             {
                 return topic;
             }
+        }
+        
+        /// <summary>
+        /// Processes action-based task creation from user input
+        /// </summary>
+        /// <param name="userInput">The user's input (lowercase)</param>
+        /// <param name="userName">The user's name</param>
+        /// <param name="taskCreationCallback">Optional callback for task creation</param>
+        /// <returns>Task creation response or empty string if not applicable</returns>
+        private string ProcessActionBasedTaskCreation(string userInput, string userName, 
+            Func<string, string, DateTime?, string> taskCreationCallback)
+        {
+            // This defines action keywords that trigger task creation
+            var actionKeywords = new[] { "remind", "task", "create", "set", "schedule", "add" };
+            
+            // This checks if any action keyword is present
+            bool hasActionKeyword = actionKeywords.Any(keyword => userInput.Contains(keyword));
+            
+            if (!hasActionKeyword)
+                return "";
+            
+            // This defines topic keywords for cybersecurity tasks (PHASE 3 FIX: Expanded and consistent keywords)
+            var topicKeywords = new Dictionary<string, string>
+            {
+                { "2fa", "Enable two-factor authentication on important accounts" },
+                { "two-factor", "Enable two-factor authentication on important accounts" },
+                { "backup", "Create backup of important files and documents" },
+                { "password", "Review and update weak passwords" },
+                { "passwords", "Review and update weak passwords" }, // Added plural form
+                { "malware", "Run full system antivirus scan" },
+                { "updates", "Check for and install security updates" },
+                { "antivirus", "Update and run antivirus software scan" },
+                { "virus", "Update and run antivirus software scan" }, // Added shorter form
+                { "security", "Review general security settings and practices" }, // Added general term
+                { "phishing", "Review email security and learn phishing protection" }, // Added phishing
+                { "wifi", "Secure wireless network connections and settings" }, // Added wifi
+                { "network", "Review and secure network connections" } // Added network
+            };
+            
+            // This finds the first matching topic (checks longer keywords first for better matching)
+            string foundTopic = "";
+            string taskDescription = "";
+            
+            // This orders topics by length to prioritize longer, more specific matches
+            var orderedTopics = topicKeywords.OrderByDescending(kv => kv.Key.Length);
+            
+            foreach (var topic in orderedTopics)
+            {
+                if (userInput.Contains(topic.Key))
+                {
+                    foundTopic = topic.Key;
+                    taskDescription = topic.Value;
+                    break;
+                }
+            }
+            
+            // This handles cases where no specific topic is found but action keywords are present
+            if (string.IsNullOrEmpty(foundTopic))
+            {
+                return $"{userName}, I detected you want to create a task, but I couldn't identify a specific cybersecurity topic. " +
+                       "Try something like 'remind me to backup my files' or 'create a task for 2fa setup'.";
+            }
+            
+            // This parses time keywords for reminder dates
+            DateTime? reminderDate = ParseTimeKeywords(userInput);
+            
+            // This creates the task if callback is provided
+            if (taskCreationCallback != null)
+            {
+                string taskTitle = GenerateTaskTitle(foundTopic);
+                string result = taskCreationCallback(taskTitle, taskDescription, reminderDate);
+                
+                if (!string.IsNullOrEmpty(result))
+                {
+                    return result;
+                }
+            }
+            
+            // This provides a fallback response if no callback
+            string reminderText = reminderDate.HasValue ? $" for {reminderDate.Value:dddd, MMMM dd, yyyy}" : "";
+            return $"{userName}, I've detected you want to create a {foundTopic} task{reminderText}. " +
+                   "Use the Task Assistant panel or ask me to create specific tasks!";
+        }
+        
+        /// <summary>
+        /// Processes quiz-related keywords
+        /// </summary>
+        /// <param name="userInput">The user's input (lowercase)</param>
+        /// <param name="userName">The user's name</param>
+        /// <returns>Quiz response or empty string if not applicable</returns>
+        private string ProcessQuizKeywords(string userInput, string userName)
+        {
+            // This defines quiz keywords
+            var quizKeywords = new[] { "quiz", "game", "test" };
+            
+            // This checks if any quiz keyword is present
+            bool hasQuizKeyword = quizKeywords.Any(keyword => userInput.Contains(keyword));
+            
+            if (hasQuizKeyword)
+            {
+                return $"{userName}, you can take our cybersecurity quiz! It features 10 random questions covering " +
+                       "phishing, passwords, malware, and more. Just click on the 'Cybersecurity Quiz' tab above to get started!";
+            }
+            
+            return "";
+        }
+        
+        /// <summary>
+        /// Parses time-related keywords from user input
+        /// </summary>
+        /// <param name="userInput">The user's input (lowercase)</param>
+        /// <returns>Parsed DateTime or null if no time found</returns>
+        private DateTime? ParseTimeKeywords(string userInput)
+        {
+            // This handles "today" and "tomorrow"
+            if (userInput.Contains("today"))
+                return DateTime.Today;
+            if (userInput.Contains("tomorrow"))
+                return DateTime.Today.AddDays(1);
+            
+            // This handles "in X days" patterns (both number and word forms)
+            var dayPatterns = new Dictionary<string, int>
+            {
+                { "in 1 day", 1 }, { "in one day", 1 },
+                { "in 2 days", 2 }, { "in two days", 2 },
+                { "in 3 days", 3 }, { "in three days", 3 },
+                { "in 4 days", 4 }, { "in four days", 4 },
+                { "in 5 days", 5 }, { "in five days", 5 },
+                { "in 6 days", 6 }, { "in six days", 6 }
+            };
+            
+            foreach (var pattern in dayPatterns)
+            {
+                if (userInput.Contains(pattern.Key))
+                    return DateTime.Today.AddDays(pattern.Value);
+            }
+            
+            // This handles "in X weeks" patterns
+            var weekPatterns = new Dictionary<string, int>
+            {
+                { "in 1 week", 1 }, { "in one week", 1 },
+                { "in 2 weeks", 2 }, { "in two weeks", 2 },
+                { "in 3 weeks", 3 }, { "in three weeks", 3 },
+                { "in 4 weeks", 4 }, { "in four weeks", 4 }
+            };
+            
+            foreach (var pattern in weekPatterns)
+            {
+                if (userInput.Contains(pattern.Key))
+                    return DateTime.Today.AddDays(pattern.Value * 7);
+            }
+            
+            // This handles "in X months" patterns
+            var monthPatterns = new Dictionary<string, int>
+            {
+                { "in 1 month", 1 }, { "in one month", 1 },
+                { "in 2 months", 2 }, { "in two months", 2 },
+                { "in 3 months", 3 }, { "in three months", 3 },
+                { "in 4 months", 4 }, { "in four months", 4 },
+                { "in 5 months", 5 }, { "in five months", 5 },
+                { "in 6 months", 6 }, { "in six months", 6 }
+            };
+            
+            foreach (var pattern in monthPatterns)
+            {
+                if (userInput.Contains(pattern.Key))
+                    return DateTime.Today.AddMonths(pattern.Value);
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Generates appropriate task titles based on topics
+        /// </summary>
+        /// <param name="topic">The cybersecurity topic</param>
+        /// <returns>A formatted task title</returns>
+        private string GenerateTaskTitle(string topic)
+        {
+            var titleMappings = new Dictionary<string, string>
+            {
+                { "2fa", "Set up Two-Factor Authentication" },
+                { "two-factor", "Set up Two-Factor Authentication" },
+                { "backup", "Create Data Backup" },
+                { "password", "Update Passwords" },
+                { "passwords", "Update Passwords" }, // Added plural form
+                { "malware", "Run Malware Scan" },
+                { "updates", "Install Security Updates" },
+                { "antivirus", "Update Antivirus Software" },
+                { "virus", "Update Antivirus Software" }, // Added shorter form
+                { "security", "Review Security Settings" }, // Added general term
+                { "phishing", "Learn Phishing Protection" }, // Added phishing
+                { "wifi", "Secure WiFi Connections" }, // Added wifi
+                { "network", "Secure Network Settings" } // Added network
+            };
+            
+            return titleMappings.ContainsKey(topic) ? titleMappings[topic] : $"Cybersecurity Task - {topic}";
         }
     }
 } 

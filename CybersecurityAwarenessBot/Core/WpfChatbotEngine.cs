@@ -30,7 +30,7 @@ namespace CybersecurityAwarenessBot.Core
         }
         
         /// <summary>
-        /// Gets a response for the user's input
+        /// Gets a response for the user's input with enhanced task creation support
         /// </summary>
         /// <param name="userInput">The user's input text</param>
         /// <param name="userName">The user's name</param>
@@ -39,8 +39,14 @@ namespace CybersecurityAwarenessBot.Core
         {
             try
             {
-                // This gets the response from the database with context
-                string response = _responseDb.GetResponse(userInput, userName, _currentTopic, _lastFollowUpQuestion);
+                // This creates the task creation callback for the ResponseDatabase
+                Func<string, string, DateTime?, string> taskCreationCallback = (title, description, reminderDate) =>
+                {
+                    return _mainWindow.CreateTaskFromActionKeywords(title, description, reminderDate, userName);
+                };
+                
+                // This gets the response from the database with context and task creation support
+                string response = _responseDb.GetResponse(userInput, userName, _currentTopic, _lastFollowUpQuestion, taskCreationCallback);
                 
                 // This updates the current topic based on the input
                 UpdateCurrentTopic(userInput);
