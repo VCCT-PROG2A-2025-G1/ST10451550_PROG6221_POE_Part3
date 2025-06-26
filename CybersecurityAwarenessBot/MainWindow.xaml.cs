@@ -85,9 +85,8 @@ namespace CybersecurityAwarenessBot
             // This displays the welcome message
             DisplayWelcomeMessage();
             
-            // This displays initial instructions
-            AppendToChatDisplay("Bot: Type 'help' to see available topics, or ask me about cybersecurity.", Brushes.Yellow);
-            AppendToChatDisplay("Bot: You can also ask me to help with tasks like 'create a task' or 'remind me to update passwords'.", Brushes.Cyan);
+            // This displays initial instructions with merged task assistant info
+            AppendToChatDisplayForStartup("Bot: Type 'help' to see available topics and commands for the task system, or ask me about cybersecurity.", Brushes.Yellow);
             AppendDividerToChat();
         }
         
@@ -157,7 +156,7 @@ namespace CybersecurityAwarenessBot
         /// </summary>
         private void DisplayWelcomeMessage()
         {
-            AppendToChatDisplay($"Bot: Hello, {_userName}! I'm here to help you learn about cybersecurity.", Brushes.LightGreen);
+            AppendToChatDisplayForStartup($"Bot: Hello, {_userName}! I'm here to help you learn about cybersecurity.", Brushes.LightGreen);
             AppendDividerToChat();
         }
         
@@ -189,7 +188,7 @@ namespace CybersecurityAwarenessBot
             if (string.IsNullOrEmpty(input)) return;
             
             // This displays the user's input
-            AppendToChatDisplay($"You: {input}", Brushes.White);
+            AppendToChatDisplay($"You: {input}", Brushes.ForestGreen);
             
             // This clears the input field
             UserInput.Text = "";
@@ -469,37 +468,46 @@ namespace CybersecurityAwarenessBot
         /// </summary>
         private void DisplayHelpMenu()
         {
-            AppendToChatDisplay("Bot: Here are the available cybersecurity topics I can help with:", Brushes.Yellow);
-            AppendToChatDisplay("• passwords - Learn about creating strong passwords", Brushes.Cyan);
-            AppendToChatDisplay("• phishing - Understand and avoid phishing attacks", Brushes.Cyan);
-            AppendToChatDisplay("• malware - Protect against malicious software", Brushes.Cyan);
-            AppendToChatDisplay("• social engineering - Recognize manipulation tactics", Brushes.Cyan);
-            AppendToChatDisplay("• data protection - Keep your information safe", Brushes.Cyan);
-            AppendToChatDisplay("• public wifi - Stay secure on public networks", Brushes.Cyan);
-            AppendToChatDisplay("• updates - Keep software current and secure", Brushes.Cyan);
-            AppendToChatDisplay("• backup - Protect against data loss", Brushes.Cyan);
-            AppendToChatDisplay("• 2fa - Two-factor authentication security", Brushes.Cyan);
-            AppendToChatDisplay("", Brushes.White);
-            AppendToChatDisplay("Bot: TASK ASSISTANT COMMANDS:", Brushes.Yellow);
-            AppendToChatDisplay("• 'Add task - [task title]' - Create a new task", Brushes.LightGreen);
-            AppendToChatDisplay("• 'Create task to [task description]' - Alternative creation", Brushes.LightGreen);
-            AppendToChatDisplay("• 'Show my tasks' or 'List tasks' - View current tasks", Brushes.LightGreen);
-            AppendToChatDisplay("• After creating a task, I'll ask about reminders", Brushes.LightGreen);
-            AppendToChatDisplay("• Use the Edit button in the Task Assistant panel to modify tasks", Brushes.LightGreen);
-            AppendToChatDisplay("", Brushes.White);
-            AppendToChatDisplay("Bot: EXAMPLE TASK COMMANDS:", Brushes.Yellow);
-            AppendToChatDisplay("• 'Add task - Review privacy settings'", Brushes.White);
-            AppendToChatDisplay("• 'Add task - Enable two-factor authentication'", Brushes.White);
-            AppendToChatDisplay("• 'Add task - Update antivirus software'", Brushes.White);
-            AppendToChatDisplay("• 'Add task - Backup important files'", Brushes.White);
-            AppendToChatDisplay("", Brushes.White);
-            AppendToChatDisplay("Bot: REMINDER OPTIONS:", Brushes.Yellow);
-            AppendToChatDisplay("• 'Yes, remind me tomorrow'", Brushes.Orange);
-            AppendToChatDisplay("• 'Yes, remind me in 3 days'", Brushes.Orange);
-            AppendToChatDisplay("• 'Yes, remind me next week'", Brushes.Orange);
-            AppendToChatDisplay("• 'No thanks' (skip reminder)", Brushes.Orange);
-            AppendToChatDisplay("", Brushes.White);
-            AppendToChatDisplay("Bot: You can also use the Task Assistant panel on the right for a visual interface!", Brushes.Cyan);
+            // Top border
+            AppendToChatDisplayInstantly("═".PadRight(60, '═'), Brushes.DarkCyan);
+            
+            AppendToChatDisplayInstantly("Bot: Here are the available cybersecurity topics I can help with:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• passwords - Learn about creating strong passwords", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• phishing - Understand and avoid phishing attacks", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• malware - Protect against malicious software", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• social engineering - Recognize manipulation tactics", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• data protection - Keep your information safe", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• public wifi - Stay secure on public networks", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• updates - Keep software current and secure", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• backup - Protect against data loss", Brushes.Cyan);
+            AppendToChatDisplayInstantly("• 2fa - Two-factor authentication security", Brushes.Cyan);
+            
+            // Section divider
+            AppendToChatDisplayInstantly("─".PadRight(60, '─'), Brushes.DarkCyan);
+            
+            AppendToChatDisplayInstantly("Bot: TASK ASSISTANT COMMANDS:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• 'Add task - [task title]' - Create a new task", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Create task to [task description]' - Alternative creation", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Show my tasks' or 'List tasks' - View current tasks", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• After creating a task, I'll ask about reminders", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• Use the Edit button in the Task Assistant panel to modify tasks", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("", Brushes.White);
+            AppendToChatDisplayInstantly("Bot: EXAMPLE TASK COMMANDS:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• 'Add task - Review privacy settings'", Brushes.White);
+            AppendToChatDisplayInstantly("• 'Add task - Enable two-factor authentication'", Brushes.White);
+            AppendToChatDisplayInstantly("• 'Add task - Update antivirus software'", Brushes.White);
+            AppendToChatDisplayInstantly("• 'Add task - Backup important files'", Brushes.White);
+            AppendToChatDisplayInstantly("", Brushes.White);
+            AppendToChatDisplayInstantly("Bot: REMINDER OPTIONS:", Brushes.Yellow);
+            AppendToChatDisplayInstantly("• 'Yes, remind me tomorrow'", Brushes.Orange);
+            AppendToChatDisplayInstantly("• 'Yes, remind me in 3 days'", Brushes.Orange);
+            AppendToChatDisplayInstantly("• 'Yes, remind me next week'", Brushes.Orange);
+            AppendToChatDisplayInstantly("• 'No thanks' (skip reminder)", Brushes.Orange);
+            AppendToChatDisplayInstantly("", Brushes.White);
+            AppendToChatDisplayInstantly("Bot: You can also use the Task Assistant panel on the right for a visual interface!", Brushes.Cyan);
+            
+            // Bottom border
+            AppendToChatDisplayInstantly("═".PadRight(60, '═'), Brushes.DarkCyan);
         }
         
         /// <summary>
@@ -543,6 +551,16 @@ namespace CybersecurityAwarenessBot
         }
         
         /// <summary>
+        /// Appends text to the chat display without typing effect (for startup messages)
+        /// </summary>
+        /// <param name="text">The text to append</param>
+        /// <param name="color">The color for the text</param>
+        public void AppendToChatDisplayForStartup(string text, Brush color)
+        {
+            AppendToChatDisplayInstantly(text, color);
+        }
+        
+        /// <summary>
         /// Appends text instantly without typing effect
         /// </summary>
         /// <param name="text">The text to append</param>
@@ -553,6 +571,17 @@ namespace CybersecurityAwarenessBot
             Paragraph paragraph = new Paragraph();
             Run run = new Run(text) { Foreground = color };
             paragraph.Inlines.Add(run);
+            
+            // This checks if it's a user message to apply right alignment
+            if (text.StartsWith("You:"))
+            {
+                paragraph.TextAlignment = TextAlignment.Right;
+            }
+            else if (text.StartsWith("Bot:"))
+            {
+                // This limits bot message width to prevent them from stretching too wide
+                paragraph.Margin = new Thickness(0, 0, 150, 0);
+            }
             
             // This adds the paragraph to the chat display
             ChatDisplay.Document.Blocks.Add(paragraph);
@@ -572,6 +601,17 @@ namespace CybersecurityAwarenessBot
             Paragraph paragraph = new Paragraph();
             Run run = new Run("") { Foreground = color };
             paragraph.Inlines.Add(run);
+            
+            // This checks if it's a user message to apply right alignment
+            if (text.StartsWith("You:"))
+            {
+                paragraph.TextAlignment = TextAlignment.Right;
+            }
+            else if (text.StartsWith("Bot:"))
+            {
+                // This limits bot message width to prevent them from stretching too wide
+                paragraph.Margin = new Thickness(0, 0, 150, 0);
+            }
             
             // This adds the paragraph to the chat display
             ChatDisplay.Document.Blocks.Add(paragraph);
@@ -806,5 +846,305 @@ namespace CybersecurityAwarenessBot
                 _tasks.Add(task);
             }
         }
+        
+        #region Quiz Game Functionality
+        
+        // This stores the quiz manager
+        private QuizManager _quizManager;
+        
+        // This tracks if an answer has been submitted for the current question
+        private bool _answerSubmitted = false;
+        
+        /// <summary>
+        /// Initializes the quiz manager
+        /// </summary>
+        private void InitializeQuizManager()
+        {
+            if (_quizManager == null)
+            {
+                _quizManager = new QuizManager();
+            }
+        }
+        
+        /// <summary>
+        /// Handles the Start Quiz button click
+        /// </summary>
+        private void StartQuizButton_Click(object sender, RoutedEventArgs e)
+        {
+            InitializeQuizManager();
+            _quizManager.StartNewQuiz();
+            
+            // This hides the start panel and shows the question panel
+            StartQuizPanel.Visibility = Visibility.Collapsed;
+            QuizQuestionPanel.Visibility = Visibility.Visible;
+            QuizResultsPanel.Visibility = Visibility.Collapsed;
+            
+            // This displays the first question
+            DisplayCurrentQuestion();
+        }
+        
+        /// <summary>
+        /// Displays the current quiz question
+        /// </summary>
+        private void DisplayCurrentQuestion()
+        {
+            if (_quizManager?.CurrentQuestion == null) return;
+            
+            var question = _quizManager.CurrentQuestion;
+            _answerSubmitted = false;
+            
+            // This updates the progress and score
+            QuestionProgressText.Text = $"Question {_quizManager.CurrentQuestionNumber} of {_quizManager.TotalQuestions}";
+            
+            // Show score out of questions answered so far (but at least 1 to avoid 0/0 on first question)
+            int questionsAnswered = Math.Max(1, _quizManager.CurrentQuestionNumber - 1);
+            ScoreText.Text = $"Score: {_quizManager.Score}/{questionsAnswered}";
+            
+            // This displays the question text
+            QuestionText.Text = question.Question;
+            
+            // This creates the answer options with letter prefixes
+            var answerOptions = new List<string>();
+            if (question.IsTrueFalse)
+            {
+                answerOptions.Add("True");
+                answerOptions.Add("False");
+            }
+            else
+            {
+                // This adds letter prefixes (A, B, C, D) for multiple choice
+                for (int i = 0; i < question.Options.Count; i++)
+                {
+                    char letter = (char)('A' + i);
+                    answerOptions.Add($"{letter}. {question.Options[i]}");
+                }
+            }
+            
+            // This creates the answer buttons dynamically
+            CreateAnswerButtons(answerOptions);
+            
+            // This hides feedback and control buttons
+            FeedbackPanel.Visibility = Visibility.Collapsed;
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+            ViewResultsButton.Visibility = Visibility.Collapsed;
+            
+            // This resets answer button styles
+            ResetAnswerButtonStyles();
+        }
+        
+        /// <summary>
+        /// Handles answer button clicks
+        /// </summary>
+        private void AnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_answerSubmitted) return;
+            
+            var button = sender as Button;
+            if (button?.Tag == null) return;
+            
+            int answerIndex = (int)button.Tag;
+            _answerSubmitted = true;
+            
+            // This submits the answer and gets feedback
+            bool isCorrect = _quizManager.SubmitAnswer(answerIndex);
+            
+            // This provides visual feedback
+            HighlightAnswerButtons(answerIndex, isCorrect);
+            
+            // This displays feedback
+            DisplayAnswerFeedback(isCorrect);
+            
+            // Update score display after answering
+            UpdateScoreDisplay();
+            
+            // This shows appropriate control buttons
+            if (_quizManager.CurrentQuestionNumber >= _quizManager.TotalQuestions)
+            {
+                // This is the final question - show View Results button
+                ViewResultsButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // More questions remain - show Next Question button
+                NextQuestionButton.Visibility = Visibility.Visible;
+            }
+        }
+        
+
+        
+        /// <summary>
+        /// Highlights answer buttons to show correct/incorrect responses
+        /// </summary>
+        private void HighlightAnswerButtons(int selectedIndex, bool isCorrect)
+        {
+            var question = _quizManager.CurrentQuestion;
+            if (question == null) return;
+            
+            // This highlights the buttons in the StackPanel
+            for (int i = 0; i < AnswerButtonsPanel.Children.Count; i++)
+            {
+                var button = AnswerButtonsPanel.Children[i] as Button;
+                if (button == null) continue;
+                
+                if (i == selectedIndex)
+                {
+                    // This highlights the selected answer
+                    button.Background = isCorrect ? Brushes.Green : Brushes.Red;
+                    button.Foreground = Brushes.White;
+                }
+                else if (i == question.CorrectAnswerIndex)
+                {
+                    // This highlights the correct answer
+                    button.Background = Brushes.Green;
+                    button.Foreground = Brushes.White;
+                }
+                else
+                {
+                    // This dims incorrect options
+                    button.Background = Brushes.Gray;
+                    button.Foreground = Brushes.LightGray;
+                }
+                
+                // This disables all buttons
+                button.IsEnabled = false;
+            }
+        }
+        
+
+        
+        /// <summary>
+        /// Creates answer buttons dynamically
+        /// </summary>
+        private void CreateAnswerButtons(List<string> options)
+        {
+            AnswerButtonsPanel.Children.Clear();
+            
+            for (int i = 0; i < options.Count; i++)
+            {
+                var button = new Button
+                {
+                    Content = options[i],
+                    Margin = new Thickness(0, 5, 0, 0),
+                    Padding = new Thickness(15, 10, 15, 10),
+                    Background = new SolidColorBrush(Color.FromRgb(64, 64, 64)), // #404040
+                    Foreground = Brushes.White,
+                    BorderThickness = new Thickness(2),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(85, 85, 85)), // #555
+                    FontSize = 14,
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    HorizontalContentAlignment = HorizontalAlignment.Left,
+                    Cursor = Cursors.Hand,
+                    Tag = i // Store the index in the Tag property
+                };
+                
+                button.Click += AnswerButton_Click;
+                AnswerButtonsPanel.Children.Add(button);
+            }
+        }
+        
+        /// <summary>
+        /// Resets answer button styles to default
+        /// </summary>
+        private void ResetAnswerButtonStyles()
+        {
+            // Reset all answer buttons to default style
+            foreach (Button button in AnswerButtonsPanel.Children)
+            {
+                button.Background = new SolidColorBrush(Color.FromRgb(64, 64, 64)); // #404040
+                button.Foreground = Brushes.White;
+                button.IsEnabled = true;
+            }
+        }
+        
+        /// <summary>
+        /// Updates the score display
+        /// </summary>
+        private void UpdateScoreDisplay()
+        {
+            // After answering, show score out of current question number
+            ScoreText.Text = $"Score: {_quizManager.Score}/{_quizManager.CurrentQuestionNumber}";
+        }
+        
+        /// <summary>
+        /// Displays feedback after answering a question
+        /// </summary>
+        private void DisplayAnswerFeedback(bool isCorrect)
+        {
+            var question = _quizManager.CurrentQuestion;
+            if (question == null) return;
+            
+            // This sets the feedback text and color
+            if (isCorrect)
+            {
+                FeedbackText.Text = "✅ Correct!";
+                FeedbackText.Foreground = Brushes.Green;
+            }
+            else
+            {
+                FeedbackText.Text = "❌ Incorrect";
+                FeedbackText.Foreground = Brushes.Red;
+            }
+            
+            // This displays the explanation
+            ExplanationText.Text = question.Explanation;
+            
+            // This shows the feedback panel
+            FeedbackPanel.Visibility = Visibility.Visible;
+        }
+        
+        /// <summary>
+        /// Handles the Next Question button click
+        /// </summary>
+        private void NextQuestionButton_Click(object sender, RoutedEventArgs e)
+        {
+            _quizManager.NextQuestion();
+            DisplayCurrentQuestion();
+        }
+        
+        /// <summary>
+        /// Handles the View Results button click
+        /// </summary>
+        private void ViewResultsButton_Click(object sender, RoutedEventArgs e)
+        {
+            DisplayQuizResults();
+        }
+        
+        /// <summary>
+        /// Displays the quiz results
+        /// </summary>
+        private void DisplayQuizResults()
+        {
+            // This hides the question panel and shows results
+            QuizQuestionPanel.Visibility = Visibility.Collapsed;
+            QuizResultsPanel.Visibility = Visibility.Visible;
+            
+            // This displays the final score
+            double percentage = _quizManager.GetScorePercentage();
+            FinalScoreText.Text = $"Final Score: {_quizManager.Score}/{_quizManager.TotalQuestions} ({percentage:F0}%)";
+            
+            // This displays the performance description
+            PerformanceText.Text = _quizManager.GetPerformanceDescription();
+            
+            // This hides control buttons
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+            ViewResultsButton.Visibility = Visibility.Collapsed;
+        }
+        
+        /// <summary>
+        /// Handles the Restart Quiz button click
+        /// </summary>
+        private void RestartQuizButton_Click(object sender, RoutedEventArgs e)
+        {
+            // This resets to the start panel
+            QuizResultsPanel.Visibility = Visibility.Collapsed;
+            QuizQuestionPanel.Visibility = Visibility.Collapsed;
+            StartQuizPanel.Visibility = Visibility.Visible;
+            
+            // This hides control buttons
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+            ViewResultsButton.Visibility = Visibility.Collapsed;
+        }
+        
+        #endregion
     }
 } 
