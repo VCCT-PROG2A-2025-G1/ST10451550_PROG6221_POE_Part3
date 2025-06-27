@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 
+//------------------------------------------------------------------------------------------------------------------------
+
 namespace CybersecurityAwarenessBot.Data
 {
     /// <summary>
@@ -86,4 +88,6 @@ namespace CybersecurityAwarenessBot.Data
             IsTrueFalse = true;
         }
     }
-} 
+}
+
+//--------------------------------------------------End of File--------------------------------------------------

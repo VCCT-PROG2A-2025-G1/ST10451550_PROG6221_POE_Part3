@@ -4,6 +4,8 @@ using CybersecurityAwarenessBot.UI;
 using CybersecurityAwarenessBot.Data;
 using CybersecurityAwarenessBot.Audio;
 
+//------------------------------------------------------------------------------------------------------------------------
+
 namespace CybersecurityAwarenessBot.Core
 {
     /// <summary>
@@ -261,4 +263,6 @@ namespace CybersecurityAwarenessBot.Core
             // No change to _currentTopic if we don't detect a new topic
         }
     }
-} 
+}
+
+//--------------------------------------------------End of File--------------------------------------------------

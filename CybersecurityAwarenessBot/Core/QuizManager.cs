@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using CybersecurityAwarenessBot.Data;
 
+//--------------------------------------------------------------------------------------------------------------------------------
+
 namespace CybersecurityAwarenessBot.Core
 {
     /// <summary>
@@ -253,4 +255,6 @@ namespace CybersecurityAwarenessBot.Core
             };
         }
     }
-} 
+}
+
+//--------------------------------------------------End of File--------------------------------------------------

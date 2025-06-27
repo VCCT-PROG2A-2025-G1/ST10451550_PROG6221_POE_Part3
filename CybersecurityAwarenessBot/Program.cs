@@ -27,6 +27,14 @@
 // String Contains Method - https://learn.microsoft.com/en-us/dotnet/api/system.string.contains
 // C# Lists - https://www.geeksforgeeks.org/c-sharp-list-class/
 // Random Class - https://learn.microsoft.com/en-us/dotnet/api/system.random?view=net-9.0
+// Natural Language Processing Fundamentals - https://www.geeksforgeeks.org/natural-language-processing-nlp-tutorial/
+// Keyword Extraction Methods in NLP - https://www.geeksforgeeks.org/nlp/keyword-extraction-methods-in-nlp/
+// Activity Logging Best Practices - https://betterstack.com/community/guides/logging/logging-best-practices/
+// Application Logging Development Guide - https://coralogix.com/guides/application-performance-monitoring/application-logging-best-practices/
+// WPF User Interface Best Practices - https://blog.postsharp.net/wpf-best-practices-2024
+// WPF Design Guidelines and Controls - https://learn.microsoft.com/en-us/dotnet/desktop/wpf/controls/guidelines-for-designing-stylable-controls
+// Task Automation and UI Design Patterns - https://www.codemag.com/Article/1905031/A-Design-Pattern-for-Building-WPF-Business-Applications-Part-1
+// Youtube playlist I used to understand and practice WPF - https://www.youtube.com/watch?v=t9ivUosw_iI&list=PLih2KERbY1HHOOJ2C6FOrVXIwg4AZ-hk1
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -82,3 +90,5 @@ namespace CybersecurityAwarenessBot
     }
 }
 */
+
+//--------------------------------------------------End of File--------------------------------------------------

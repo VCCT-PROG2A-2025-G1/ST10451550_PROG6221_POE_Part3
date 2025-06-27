@@ -1,37 +1,55 @@
-# ST10451550_PROG6221_POE_Part2
-# Cybersecurity Awareness Chatbot - Enhanced Version
-This is an advanced console-based educational chatbot designed to raise cybersecurity awareness among South African citizens with intelligent conversation capabilities.
-## Project Description
-This enhanced chatbot provides dynamic information on various cybersecurity topics, including phishing, password safety, and safe browsing practices. It features improved conversation flow, memory capabilities, sentiment detection, and intelligent responses that adapt to user interactions.
-## Features
-- Interactive conversation with personalised responses
-- Information on 9 cybersecurity topics with response variations
-- Intelligent conversation flow with relevant follow-up questions and specific answers
-- Memory system that recalls and connects previously discussed topics
-- Sentiment detection with empathetic responses to user emotions
-- Multiple keyword detection for complex queries
-- Enhanced error handling and edge case management
-- Colourful console interface with ASCII art and voice greeting
-- Simple and intuitive user experience
-## How to Use
-1. Run the application
-2. Enter your name when prompted (letters only)
-3. Ask questions about cybersecurity topics (supports multiple topics per query)
-4. Engage with follow-up questions for deeper learning
-5. Experience varied responses and topic connections through memory
-6. Receive empathetic responses based on your emotional tone
-7. Type 'help' to see available topics
-8. Type 'exit' or 'quit' to end the conversation
-## Technical Details
-- Built in C# as a console application
-- Enhanced modular architecture with conversation state management
-- Advanced input validation and keyword recognition
-- Memory system for topic tracking and recall with natural transitions
-- Sentiment detection using keyword-based emotion recognition
-- Dictionary-based response variations with random selection
-- Comprehensive error handling for robust user experience
-## Project Structure
-- Core: Contains the enhanced chatbot engine with conversation logic, memory, and sentiment detection
-- UI: Handles user interface and display functionality
-- Data: Manages cybersecurity response content with multiple variations and follow-up systems
-- Audio: Manages voice greeting functionality
+# ST10451550_PROG6221_POE
+# Cybersecurity Awareness Chatbot
+This is a comprehensive WPF-based educational chatbot designed to raise cybersecurity awareness among South African citizens with intelligent conversation capabilities, task management, quiz system, and activity tracking.
+
+# Project Description
+This cybersecurity awareness chatbot provides dynamic information on various cybersecurity topics, including phishing, password safety, and safe browsing practices. It features an intelligent conversation system, interactive quiz game, task management with reminders, activity logging, and enhanced natural language processing that adapts to user interactions.
+
+# Features
+Interactive conversation with personalised responses
+Information on 9+ cybersecurity topics with response variations
+Intelligent conversation flow with relevant follow-up questions and specific answers
+Memory system that recalls and connects previously discussed topics
+Sentiment detection with empathetic responses to user emotions
+Enhanced natural language processing with action-based keyword detection
+Task management system with reminders for cybersecurity activities
+Interactive cybersecurity quiz with 30+ questions and immediate feedback
+Comprehensive activity logging and progress tracking
+Professional WPF interface with tabbed navigation
+Voice greeting with ASCII art branding
+Natural language task creation using chat commands
+Multiple keyword detection for complex queries
+Enhanced error handling and edge case management
+
+# How to Use
+Run the application
+Enter your name when prompted in the welcome dialogue
+Use the Chat tab to ask questions about cybersecurity topics
+Create tasks using the Task Assistant tab or natural language commands
+Take the cybersecurity quiz to test your knowledge
+View your activity history in the Activity Log tab
+Type 'help' in chat to see available topics and commands
+Use natural language for task creation (e.g., "remind me to backup files tomorrow")
+Navigate between tabs for different features
+
+# Technical Details
+Built in C# as a WPF application using XAML
+Enhanced modular architecture with conversation state management
+Advanced input validation and keyword recognition
+Memory system for topic tracking and recall with natural transitions
+Sentiment detection using keyword-based emotion recognition
+Natural language processing for action-based task creation
+Dictionary-based response variations with random selection
+Comprehensive error handling for robust user experience
+Activity logging system with timestamped entries
+Quiz system with scoring and feedback mechanisms
+Task management with reminder calculations and date parsing
+
+# Project Structure
+Core: Contains the chatbot engines, quiz manager, and conversation logic
+UI: Handles user interface and display functionality (both console and WPF)
+Data: Manages cybersecurity response content, quiz questions, tasks, and activity entries
+Audio: Manages voice greeting functionality
+Utilities: Activity logging and tracking systems
+MainWindow.xaml/cs: Primary WPF interface and application logic
+App.xaml/cs: WPF application configuration and startup

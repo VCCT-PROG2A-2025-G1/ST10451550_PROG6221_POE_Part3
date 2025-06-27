@@ -493,6 +493,111 @@
                     </Border>
                 </Grid>
             </TabItem>
+            
+            <!-- Activity Log Tab (PHASE 4 ADDITION) -->
+            <TabItem Header="📋 Activity Log">
+                <Grid Background="#1E1E1E">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Activity Log Header -->
+                    <Border Grid.Row="0" Background="#2D2D30" CornerRadius="10" Margin="20,20,20,10" Padding="20">
+                        <StackPanel>
+                            <TextBlock x:Name="ActivityLogTitleText" Text="📋 Activity History" 
+                                       FontSize="24" FontWeight="Bold" Foreground="#00CED1" 
+                                       HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="ActivityLogSubtitleText" Text="Track your cybersecurity learning progress and task management" 
+                                       FontSize="14" Foreground="White" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Activity Log Content Area -->
+                    <Border Grid.Row="1" Background="#2D2D30" CornerRadius="10" Margin="20,10,20,10" Padding="20">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Activity Summary -->
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,15">
+                                <TextBlock x:Name="ActivityCountText" Text="Total Activities: 0" 
+                                           FontSize="14" FontWeight="Bold" Foreground="#00CED1" Margin="0,0,20,0"/>
+                                <TextBlock x:Name="LastActivityText" Text="Last Activity: None" 
+                                           FontSize="14" Foreground="White"/>
+                            </StackPanel>
+                            
+                            <!-- Activity List -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="ActivityListPanel">
+                                    <!-- No Activities Panel -->
+                                    <StackPanel x:Name="NoActivitiesPanel" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                Margin="0,50,0,0">
+                                        <TextBlock Text="📝" FontSize="48" Foreground="#555" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                        <TextBlock Text="No activities yet" 
+                                                   FontSize="18" Foreground="#888" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Start using the chatbot to build your activity history!" 
+                                                   FontSize="14" Foreground="#666" HorizontalAlignment="Center" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Activities Display -->
+                                    <ItemsControl x:Name="ActivityItemsControl" Visibility="Collapsed">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#1E1E1E" CornerRadius="5" Margin="0,0,0,8" Padding="15">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        
+                                                        <!-- Activity Type Icon -->
+                                                        <Border Grid.Column="0" Background="#00CED1" CornerRadius="3" 
+                                                                Width="40" Height="40" Margin="0,0,15,0">
+                                                            <TextBlock x:Name="ActivityIcon" Text="{Binding ActivityTypeIcon}" 
+                                                                       FontSize="18" Foreground="Black" 
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        
+                                                        <!-- Activity Details -->
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Text="{Binding Description}" 
+                                                                       FontSize="14" Foreground="White" FontWeight="Bold" 
+                                                                       TextWrapping="Wrap" Margin="0,0,0,5"/>
+                                                            <TextBlock Text="{Binding FormattedTimestamp}" 
+                                                                       FontSize="12" Foreground="#888"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Activity Log Control Buttons -->
+                    <Border Grid.Row="2" Margin="20,10,20,20">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="ShowMoreActivitiesButton" Content="📋 Show All Activities" 
+                                    FontSize="14" FontWeight="Bold" Padding="15,8" 
+                                    Background="#00CED1" Foreground="Black" 
+                                    BorderThickness="0" 
+                                    Click="ShowMoreActivitiesButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button x:Name="ClearActivityLogButton" Content="🗑️ Clear All" 
+                                    FontSize="14" FontWeight="Bold" Padding="15,8" 
+                                    Background="#FF6B6B" Foreground="White" 
+                                    BorderThickness="0" 
+                                    Click="ClearActivityLogButton_Click"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window> 

@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Linq;
+using CybersecurityAwarenessBot.Core;
+
+//--------------------------------------------------------------------------------------------------------------------------------
 
 namespace CybersecurityAwarenessBot.Data
 {
@@ -45,6 +49,12 @@ namespace CybersecurityAwarenessBot.Data
         // This tracks the last detected emotion
         private string _lastDetectedEmotion = "";
         
+        // PHASE 4 ADDITION: This handles activity logging
+        private readonly ActivityLogger _activityLogger;
+        
+        // PHASE 4 ADDITION: This tracks if we're showing extended activity log
+        private bool _showingExtendedLog = false;
+        
         /// <summary>
         /// Initializes a new instance of the ResponseDatabase class
         /// </summary>
@@ -52,6 +62,9 @@ namespace CybersecurityAwarenessBot.Data
         {
             // This initializes the random number generator
             _random = new Random();
+            
+            // PHASE 4 ADDITION: This initializes the activity logger
+            _activityLogger = new ActivityLogger();
             
             // This loads all predefined responses into the dictionary
             _responses = new Dictionary<string, List<string>>
@@ -362,6 +375,12 @@ namespace CybersecurityAwarenessBot.Data
             string originalInput = userInput;
             userInput = userInput.ToLower();
             
+            // PHASE 4 ENHANCEMENT: This checks for activity log requests first
+            if (_activityLogger.IsActivityLogRequest(userInput))
+            {
+                return ProcessActivityLogRequest(userInput, userName);
+            }
+            
             // PHASE 3 ENHANCEMENT: This checks for action-based task creation first (highest priority)
             var actionTaskResult = ProcessActionBasedTaskCreation(userInput, userName, taskCreationCallback);
             if (!string.IsNullOrEmpty(actionTaskResult))
@@ -535,6 +554,9 @@ namespace CybersecurityAwarenessBot.Data
         /// <returns>A response with follow-up question</returns>
         private string GetTopicResponse(string topic, string userName, bool isTopicSwitch)
         {
+            // PHASE 4 ADDITION: This logs the chat activity for topic discussion
+            _activityLogger.LogChatActivity(topic);
+            
             // This randomly selects one of the available responses for the topic
             int responseIndex = _random.Next(0, _responses[topic].Count);
             string selectedResponse = _responses[topic][responseIndex];
@@ -924,5 +946,54 @@ namespace CybersecurityAwarenessBot.Data
             
             return titleMappings.ContainsKey(topic) ? titleMappings[topic] : $"Cybersecurity Task - {topic}";
         }
+        
+        /// <summary>
+        /// Processes activity log requests from users (PHASE 4 ADDITION)
+        /// </summary>
+        /// <param name="userInput">The user's input (lowercase)</param>
+        /// <param name="userName">The user's name</param>
+        /// <returns>Formatted activity log response</returns>
+        private string ProcessActivityLogRequest(string userInput, string userName)
+        {
+            // This checks if user wants extended log
+            if (_activityLogger.IsShowMoreRequest(userInput) || _showingExtendedLog)
+            {
+                var allActivities = _activityLogger.GetAllActivities();
+                _showingExtendedLog = false; // Reset for next time
+                
+                if (allActivities.Count == 0)
+                {
+                    return $"{userName}, you haven't performed any activities yet. Start using the chatbot to build your activity history!";
+                }
+                
+                string response = _activityLogger.FormatActivitiesForChat(allActivities);
+                return $"{userName}, here's your complete activity history:\n\n{response}";
+            }
+            else
+            {
+                // This shows recent activities (last 5)
+                var recentActivities = _activityLogger.GetRecentActivities(5);
+                bool hasMore = _activityLogger.GetActivityCount() > 5;
+                
+                if (recentActivities.Count == 0)
+                {
+                    return $"{userName}, you haven't performed any activities yet. Start using the chatbot to build your activity history!";
+                }
+                
+                string response = _activityLogger.FormatActivitiesForChat(recentActivities, hasMore);
+                return $"{userName}, here's your recent activity:\n\n{response}";
+            }
+        }
+        
+        /// <summary>
+        /// Gets the activity logger instance (PHASE 4 ADDITION)
+        /// </summary>
+        /// <returns>The activity logger</returns>
+        public ActivityLogger GetActivityLogger()
+        {
+            return _activityLogger;
+        }
     }
-} 
+}
+
+//----------------------------------------------------End of File---------------------------------------------------- 

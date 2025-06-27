@@ -13,6 +13,8 @@ using CybersecurityAwarenessBot.Core;
 using CybersecurityAwarenessBot.Data;
 using CybersecurityAwarenessBot.Audio;
 
+//---------------------------------------------------------------------------------------------------------------------------------
+
 namespace CybersecurityAwarenessBot
 {
     /// <summary>
@@ -20,16 +22,18 @@ namespace CybersecurityAwarenessBot
     /// </summary>
     public partial class MainWindow : Window
     {
-        // This stores the chatbot components
-        private readonly ResponseDatabase _responseDb;
-        private readonly AudioManager _audioManager;
+        // Private fields for the main components
+        private ResponseDatabase _responseDb;
+        private AudioManager _audioManager;
         private WpfChatbotEngine _chatbotEngine;
+        private QuizManager _quizManager;
+        private ObservableCollection<CybersecurityTask> _tasks;
+        private bool _answerSubmitted = false;
+        private string _userName;
         
-        // This stores the task list for the Task Assistant
-        private readonly ObservableCollection<CybersecurityTask> _tasks;
-        
-        // This tracks the user's name
-        private string _userName = "";
+        // PHASE 4 ADDITION: Private fields for activity logging
+        private ActivityLogger _activityLogger;
+        private int _activitiesShownInTab = 10; // Default to show 10 activities
         
         // This stores predefined cybersecurity tasks
         private readonly List<CybersecurityTask> _predefinedTasks;
@@ -40,6 +44,8 @@ namespace CybersecurityAwarenessBot
         // This stores the last created task for reminder setup
         private CybersecurityTask _lastCreatedTask = null;
         
+        //---------------------------------------------------------------------------------------------------------------------------------
+
         /// <summary>
         /// Initialises a new instance of the MainWindow class
         /// </summary>
@@ -50,6 +56,7 @@ namespace CybersecurityAwarenessBot
             // This initializes the chatbot components
             _responseDb = new ResponseDatabase();
             _audioManager = new AudioManager();
+            _quizManager = new QuizManager();
             
             // This initializes the task collection
             _tasks = new ObservableCollection<CybersecurityTask>();
@@ -82,12 +89,21 @@ namespace CybersecurityAwarenessBot
             // This creates the WPF chatbot engine
             _chatbotEngine = new WpfChatbotEngine(_responseDb, this);
             
+            // PHASE 4 ADDITION: This gets the activity logger from the response database
+            _activityLogger = _chatbotEngine.GetActivityLogger();
+            
+            // PHASE 4 ADDITION: This logs the initial system activity
+            _activityLogger.LogSystemActivity("Started cybersecurity awareness chatbot");
+            
             // This displays the welcome message
             DisplayWelcomeMessage();
             
             // This displays initial instructions with merged task assistant info
             AppendToChatDisplayForStartup("Bot: Type 'help' to see available topics and commands for the task system, or ask me about cybersecurity.", Brushes.Yellow);
             AppendDividerToChat();
+            
+            // PHASE 4 ADDITION: This initializes the activity log display
+            RefreshActivityLogDisplay();
         }
         
         /// <summary>
@@ -111,31 +127,158 @@ namespace CybersecurityAwarenessBot
         }
         
         /// <summary>
-        /// Gets the user's name through a simple dialog
+        /// Gets the user's name through a custom dialog
         /// </summary>
         private void GetUserName()
         {
-            // This gets the user's name with validation
+            // This gets the user's name with validation using a custom dialog
             while (string.IsNullOrWhiteSpace(_userName))
             {
-                string input = Microsoft.VisualBasic.Interaction.InputBox(
-                    "Please enter your name:", 
-                    "Cybersecurity Awareness Bot", 
-                    "");
-                
-                if (string.IsNullOrWhiteSpace(input))
+                var nameDialog = new Window()
                 {
-                    MessageBox.Show("Please enter a valid name.", "Name Required", 
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Title = "Cybersecurity Awareness Bot",
+                    Width = 450,
+                    Height = 250,
+                    ResizeMode = ResizeMode.NoResize,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    Background = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+                    WindowStyle = WindowStyle.ToolWindow
+                };
+
+                var mainGrid = new Grid();
+                mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                // Welcome message
+                var welcomeText = new TextBlock
+                {
+                    Text = "🛡️ Welcome to Cybersecurity Awareness Bot!",
+                    FontSize = 18,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0, 206, 209)),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(20, 20, 20, 10)
+                };
+                Grid.SetRow(welcomeText, 0);
+                mainGrid.Children.Add(welcomeText);
+
+                // Instruction text
+                var instructionText = new TextBlock
+                {
+                    Text = "Please enter your name to get started:",
+                    FontSize = 14,
+                    Foreground = Brushes.White,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(20, 0, 20, 15)
+                };
+                Grid.SetRow(instructionText, 1);
+                mainGrid.Children.Add(instructionText);
+
+                // Input textbox
+                var nameInput = new TextBox
+                {
+                    FontSize = 14,
+                    Padding = new Thickness(10, 8, 10, 8),
+                    Margin = new Thickness(40, 0, 40, 20),
+                    Background = new SolidColorBrush(Color.FromRgb(45, 45, 48)),
+                    Foreground = Brushes.White,
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(0, 206, 209)),
+                    BorderThickness = new Thickness(2),
+                    HorizontalAlignment = HorizontalAlignment.Stretch
+                };
+                Grid.SetRow(nameInput, 2);
+                mainGrid.Children.Add(nameInput);
+
+                // Button panel
+                var buttonPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(20, 0, 20, 20)
+                };
+
+                var okButton = new Button
+                {
+                    Content = "✅ Start Learning",
+                    FontSize = 14,
+                    FontWeight = FontWeights.Bold,
+                    Padding = new Thickness(20, 8, 20, 8),
+                    Margin = new Thickness(0, 0, 10, 0),
+                    Background = new SolidColorBrush(Color.FromRgb(0, 206, 209)),
+                    Foreground = Brushes.Black,
+                    BorderThickness = new Thickness(0),
+                    Cursor = Cursors.Hand
+                };
+
+                var cancelButton = new Button
+                {
+                    Content = "❌ Cancel",
+                    FontSize = 14,
+                    FontWeight = FontWeights.Bold,
+                    Padding = new Thickness(20, 8, 20, 8),
+                    Background = new SolidColorBrush(Color.FromRgb(255, 107, 107)),
+                    Foreground = Brushes.White,
+                    BorderThickness = new Thickness(0),
+                    Cursor = Cursors.Hand
+                };
+
+                buttonPanel.Children.Add(okButton);
+                buttonPanel.Children.Add(cancelButton);
+                Grid.SetRow(buttonPanel, 3);
+                mainGrid.Children.Add(buttonPanel);
+
+                nameDialog.Content = mainGrid;
+
+                bool? result = false;
+                string inputName = "";
+
+                okButton.Click += (s, e) =>
+                {
+                    inputName = nameInput.Text.Trim();
+                    if (string.IsNullOrWhiteSpace(inputName))
+                    {
+                        MessageBox.Show("Please enter a valid name.", "Name Required",
+                                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    if (!IsValidName(inputName))
+                    {
+                        MessageBox.Show("Please enter a name with letters only.", "Invalid Name",
+                                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    result = true;
+                    nameDialog.Close();
+                };
+
+                cancelButton.Click += (s, e) =>
+                {
+                    result = false;
+                    nameDialog.Close();
+                };
+
+                nameInput.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Key.Enter)
+                    {
+                        okButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    }
+                };
+
+                nameInput.Focus();
+                nameDialog.ShowDialog();
+
+                if (result == true && !string.IsNullOrWhiteSpace(inputName))
+                {
+                    _userName = inputName;
                 }
-                else if (!IsValidName(input))
+                else if (result == false)
                 {
-                    MessageBox.Show("Please enter a name with letters only.", "Invalid Name", 
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                else
-                {
-                    _userName = input;
+                    // User cancelled, exit application
+                    Application.Current.Shutdown();
+                    return;
                 }
             }
         }
@@ -159,6 +302,10 @@ namespace CybersecurityAwarenessBot
             AppendToChatDisplayForStartup($"Bot: Hello, {_userName}! I'm here to help you learn about cybersecurity.", Brushes.LightGreen);
             AppendDividerToChat();
         }
+        
+        //---------------------------------------------------------------------------------------------------------------------------------
+        
+        #region Chat Processing and User Input Handling
         
         /// <summary>
         /// Handles the Send button click event
@@ -360,10 +507,8 @@ namespace CybersecurityAwarenessBot
             // This provides feedback and offers reminder setup
             AppendToChatDisplay($"Bot: Great! I've created the task '{taskTitle}' with the description '{description}'", Brushes.LightGreen);
             AppendToChatDisplay("Bot: Would you like me to set a reminder for this task? You can say:", Brushes.Cyan);
-            AppendToChatDisplay("• 'Yes, remind me tomorrow'", Brushes.Yellow);
-            AppendToChatDisplay("• 'Yes, remind me in 3 days'", Brushes.Yellow);
-            AppendToChatDisplay("• 'Yes, remind me next week'", Brushes.Yellow);
-            AppendToChatDisplay("• 'No thanks' (to skip the reminder)", Brushes.Yellow);
+            AppendToChatDisplay("• 'Yes, remind me in x days' (or weeks/months)", Brushes.Yellow);
+            AppendToChatDisplay("• 'No' (to skip the reminder)", Brushes.Yellow);
             
             // This sets a flag to expect a reminder response
             _waitingForReminderResponse = true;
@@ -489,7 +634,7 @@ namespace CybersecurityAwarenessBot
         }
         
         /// <summary>
-        /// Displays the help menu with available topics
+        /// Displays the help menu with available topics and commands
         /// </summary>
         private void DisplayHelpMenu()
         {
@@ -513,7 +658,7 @@ namespace CybersecurityAwarenessBot
             AppendToChatDisplayInstantly("Bot: 🎯 SMART TASK CREATION (NEW!):", Brushes.Yellow);
             AppendToChatDisplayInstantly("• 'Remind me to backup my files tomorrow'", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Create a task for 2fa in 3 days'", Brushes.LightGreen);
-            AppendToChatDisplayInstantly("• 'Set a password task for next week'", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'Set a password task for 2 weeks'", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Schedule malware scan in 2 weeks'", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Add antivirus update task'", Brushes.LightGreen);
             AppendToChatDisplayInstantly("", Brushes.White);
@@ -526,8 +671,7 @@ namespace CybersecurityAwarenessBot
             AppendToChatDisplayInstantly("─".PadRight(60, '─'), Brushes.DarkCyan);
             
             AppendToChatDisplayInstantly("Bot: 🧠 QUIZ & LEARNING:", Brushes.Yellow);
-            AppendToChatDisplayInstantly("• Type 'quiz', 'game', or 'test' to access the cybersecurity quiz", Brushes.Magenta);
-            AppendToChatDisplayInstantly("• 10 random questions covering all security topics", Brushes.Magenta);
+            AppendToChatDisplayInstantly("• Type 'quiz', 'game', or 'test' to see more details", Brushes.Magenta);
             
             // Section divider
             AppendToChatDisplayInstantly("─".PadRight(60, '─'), Brushes.DarkCyan);
@@ -536,6 +680,7 @@ namespace CybersecurityAwarenessBot
             AppendToChatDisplayInstantly("• 'Add task - [task title]' - Create a new task", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Create task to [task description]' - Alternative creation", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• 'Show my tasks' or 'List tasks' - View current tasks", Brushes.LightGreen);
+            AppendToChatDisplayInstantly("• 'history' or 'log' - View your activity history", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• After creating a task, I'll ask about reminders", Brushes.LightGreen);
             AppendToChatDisplayInstantly("• Use the Edit button in the Task Assistant panel to modify tasks", Brushes.LightGreen);
             AppendToChatDisplayInstantly("", Brushes.White);
@@ -550,8 +695,14 @@ namespace CybersecurityAwarenessBot
         /// </summary>
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
+            // PHASE 4 ADDITION: This logs the system activity
+            _activityLogger?.LogSystemActivity("Accessed help menu");
+            
             DisplayHelpMenu();
             AppendDividerToChat();
+            
+            // PHASE 4 ADDITION: This auto-refreshes the activity log display
+            RefreshActivityLogDisplay();
         }
         
         /// <summary>
@@ -559,12 +710,18 @@ namespace CybersecurityAwarenessBot
         /// </summary>
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
+            // PHASE 4 ADDITION: This logs the system activity
+            _activityLogger?.LogSystemActivity("Cleared chat display");
+            
             // This clears the chat display
             ChatDisplay.Document.Blocks.Clear();
             
             // This displays a confirmation message
             AppendToChatDisplay("Bot: Chat cleared. Type 'help' to see available topics.", Brushes.Yellow);
             AppendDividerToChat();
+            
+            // PHASE 4 ADDITION: This auto-refreshes the activity log display
+            RefreshActivityLogDisplay();
         }
         
         /// <summary>
@@ -677,44 +834,31 @@ namespace CybersecurityAwarenessBot
         /// </summary>
         private void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
-            // This gets the input values
             string title = TaskTitleInput.Text.Trim();
             string description = TaskDescriptionInput.Text.Trim();
             DateTime? reminderDate = TaskReminderDate.SelectedDate;
             
-            // This validates the input
             if (string.IsNullOrEmpty(title))
             {
-                MessageBox.Show("Please enter a task title.", "Title Required", 
+                MessageBox.Show("Please enter a task title.", "Missing Title", 
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
-                TaskTitleInput.Focus();
                 return;
             }
             
             if (string.IsNullOrEmpty(description))
             {
-                MessageBox.Show("Please enter a task description.", "Description Required", 
+                MessageBox.Show("Please enter a task description.", "Missing Description", 
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
-                TaskDescriptionInput.Focus();
                 return;
-            }
-            
-            // This validates the reminder date if provided
-            if (reminderDate.HasValue && reminderDate.Value.Date < DateTime.Today)
-            {
-                var result = MessageBox.Show("The reminder date is in the past. Do you want to continue?", 
-                                             "Past Date Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.No)
-                {
-                    return;
-                }
             }
             
             // This creates the new task
             var newTask = new CybersecurityTask(title, description, reminderDate);
-            
-            // This adds the task to the collection
             _tasks.Add(newTask);
+            
+            // PHASE 4 ADDITION: This logs the task creation activity
+            string additionalInfo = reminderDate.HasValue ? $"Reminder: {reminderDate.Value:MMM dd, yyyy}" : "No reminder";
+            _activityLogger?.LogTaskActivity("added", title, additionalInfo);
             
             // This clears the input fields
             TaskTitleInput.Text = "";
@@ -723,14 +867,12 @@ namespace CybersecurityAwarenessBot
             DateDisplayBox.Text = "Click calendar icon to select date";
             DateDisplayBox.Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136));
             
-            // This shows a confirmation message
-            string dateInfo = reminderDate.HasValue ? $" with reminder for {reminderDate.Value:MMM dd, yyyy}" : "";
-            MessageBox.Show($"Task '{title}' has been added successfully{dateInfo}!", "Task Added", 
+            // This provides feedback to the user
+            MessageBox.Show($"Task '{title}' has been added successfully!", "Task Added", 
                             MessageBoxButton.OK, MessageBoxImage.Information);
             
-            // This also adds a message to the chat
-            AppendToChatDisplay($"Bot: Great! I've added the task '{title}' to your list{dateInfo}.", Brushes.LightGreen);
-            AppendDividerToChat();
+            // PHASE 4 ADDITION: This auto-refreshes the activity log display
+            RefreshActivityLogDisplay();
         }
         
         /// <summary>
@@ -770,6 +912,9 @@ namespace CybersecurityAwarenessBot
         {
             if (TaskListBox.SelectedItem is CybersecurityTask selectedTask)
             {
+                // PHASE 4 ADDITION: This logs the task edit activity
+                _activityLogger?.LogTaskActivity("loaded for editing", selectedTask.Title);
+                
                 // This loads the selected task into the edit fields
                 TaskTitleInput.Text = selectedTask.Title;
                 TaskDescriptionInput.Text = selectedTask.Description;
@@ -781,11 +926,11 @@ namespace CybersecurityAwarenessBot
                     DateDisplayBox.Text = selectedTask.ReminderDate.Value.ToString("dddd, MMMM dd, yyyy");
                     DateDisplayBox.Foreground = Brushes.White;
                 }
-                                 else
-                 {
-                     DateDisplayBox.Text = "Click calendar icon to select date";
-                     DateDisplayBox.Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136));
-                 }
+                else
+                {
+                    DateDisplayBox.Text = "Click calendar icon to select date";
+                    DateDisplayBox.Foreground = new SolidColorBrush(Color.FromRgb(136, 136, 136));
+                }
                 
                 // This removes the original task from the list
                 _tasks.Remove(selectedTask);
@@ -793,6 +938,14 @@ namespace CybersecurityAwarenessBot
                 // This provides feedback to the user
                 AppendToChatDisplay($"Bot: I've loaded '{selectedTask.Title}' into the edit form. Make your changes and click 'Add Task' to save.", Brushes.Orange);
                 AppendDividerToChat();
+                
+                // PHASE 4 ADDITION: This auto-refreshes the activity log display
+                RefreshActivityLogDisplay();
+            }
+            else
+            {
+                MessageBox.Show("Please select a task to edit.", "No Task Selected", 
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         
@@ -803,17 +956,21 @@ namespace CybersecurityAwarenessBot
         {
             if (TaskListBox.SelectedItem is CybersecurityTask selectedTask)
             {
-                // This marks the task as completed and removes it from the list
+                // PHASE 4 ADDITION: This logs the task completion activity
+                _activityLogger?.LogTaskActivity("completed", selectedTask.Title);
+                
                 selectedTask.IsCompleted = true;
                 _tasks.Remove(selectedTask);
-                
-                // This shows a confirmation message
-                MessageBox.Show($"Task '{selectedTask.Title}' has been marked as completed!", "Task Completed", 
+                MessageBox.Show($"Task '{selectedTask.Title}' marked as complete!", "Task Completed", 
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                 
-                // This adds a message to the chat
-                AppendToChatDisplay($"Bot: Excellent! You've completed the task '{selectedTask.Title}'. Keep up the great cybersecurity habits!", Brushes.LightGreen);
-                AppendDividerToChat();
+                // PHASE 4 ADDITION: This refreshes the activity log display
+                RefreshActivityLogDisplay();
+            }
+            else
+            {
+                MessageBox.Show("Please select a task to complete.", "No Task Selected", 
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         
@@ -824,19 +981,26 @@ namespace CybersecurityAwarenessBot
         {
             if (TaskListBox.SelectedItem is CybersecurityTask selectedTask)
             {
-                // This confirms the deletion with the user
                 var result = MessageBox.Show($"Are you sure you want to delete the task '{selectedTask.Title}'?", 
                                              "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 
                 if (result == MessageBoxResult.Yes)
                 {
-                    // This removes the task from the collection
-                    _tasks.Remove(selectedTask);
+                    // PHASE 4 ADDITION: This logs the task deletion activity
+                    _activityLogger?.LogTaskActivity("deleted", selectedTask.Title);
                     
-                    // This adds a message to the chat
-                    AppendToChatDisplay($"Bot: I've removed the task '{selectedTask.Title}' from your list.", Brushes.Orange);
-                    AppendDividerToChat();
+                    _tasks.Remove(selectedTask);
+                    MessageBox.Show($"Task '{selectedTask.Title}' has been deleted.", "Task Deleted", 
+                                    MessageBoxButton.OK, MessageBoxImage.Information);
+                    
+                    // PHASE 4 ADDITION: This refreshes the activity log display
+                    RefreshActivityLogDisplay();
                 }
+            }
+            else
+            {
+                MessageBox.Show("Please select a task to delete.", "No Task Selected", 
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         
@@ -882,13 +1046,9 @@ namespace CybersecurityAwarenessBot
             }
         }
         
+        #endregion
+        
         #region Quiz Game Functionality
-        
-        // This stores the quiz manager
-        private QuizManager _quizManager;
-        
-        // This tracks if an answer has been submitted for the current question
-        private bool _answerSubmitted = false;
         
         /// <summary>
         /// Initializes the quiz manager
@@ -902,20 +1062,29 @@ namespace CybersecurityAwarenessBot
         }
         
         /// <summary>
-        /// Handles the Start Quiz button click
+        /// Handles the Start Quiz button click event
         /// </summary>
         private void StartQuizButton_Click(object sender, RoutedEventArgs e)
         {
-            InitializeQuizManager();
-            _quizManager.StartNewQuiz();
+            // PHASE 4 ADDITION: This logs the quiz start activity
+            _activityLogger?.LogQuizActivity("started", "10 questions");
             
-            // This hides the start panel and shows the question panel
+            // This starts a new quiz
+            _quizManager.StartNewQuiz();
+            _answerSubmitted = false;
+            
+            // This updates the UI
             StartQuizPanel.Visibility = Visibility.Collapsed;
             QuizQuestionPanel.Visibility = Visibility.Visible;
             QuizResultsPanel.Visibility = Visibility.Collapsed;
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+            ViewResultsButton.Visibility = Visibility.Collapsed;
             
             // This displays the first question
             DisplayCurrentQuestion();
+            
+            // PHASE 4 ADDITION: This auto-refreshes the activity log display
+            RefreshActivityLogDisplay();
         }
         
         /// <summary>
@@ -1145,12 +1314,15 @@ namespace CybersecurityAwarenessBot
         /// </summary>
         private void DisplayQuizResults()
         {
+            // PHASE 4 ADDITION: This logs the quiz completion with score
+            double percentage = _quizManager.GetScorePercentage();
+            _activityLogger?.LogQuizActivity("completed", $"Score: {_quizManager.Score}/{_quizManager.TotalQuestions} ({percentage:F1}%)");
+            
             // This hides the question panel and shows results
             QuizQuestionPanel.Visibility = Visibility.Collapsed;
             QuizResultsPanel.Visibility = Visibility.Visible;
             
             // This displays the final score
-            double percentage = _quizManager.GetScorePercentage();
             FinalScoreText.Text = $"Final Score: {_quizManager.Score}/{_quizManager.TotalQuestions} ({percentage:F0}%)";
             
             // This displays the performance description
@@ -1159,6 +1331,9 @@ namespace CybersecurityAwarenessBot
             // This hides control buttons
             NextQuestionButton.Visibility = Visibility.Collapsed;
             ViewResultsButton.Visibility = Visibility.Collapsed;
+            
+            // PHASE 4 ADDITION: This auto-refreshes the activity log display
+            RefreshActivityLogDisplay();
         }
         
         /// <summary>
@@ -1192,6 +1367,13 @@ namespace CybersecurityAwarenessBot
                 var newTask = new CybersecurityTask(title, description, reminderDate);
                 _tasks.Add(newTask);
                 
+                // PHASE 4 ADDITION: This logs the task creation activity
+                string additionalInfo = reminderDate.HasValue ? $"Reminder: {reminderDate.Value:MMM dd, yyyy}" : "No reminder";
+                _activityLogger?.LogTaskActivity("added", title, additionalInfo);
+                
+                // PHASE 4 ADDITION: This auto-refreshes the activity log display
+                RefreshActivityLogDisplay();
+                
                 // This prepares the response message
                 string response = $"Perfect! I've automatically created the task '{title}' for you.";
                 
@@ -1217,6 +1399,152 @@ namespace CybersecurityAwarenessBot
             }
         }
         
+        /// <summary>
+        /// Handles the Show More Activities button click event (PHASE 4 ADDITION)
+        /// </summary>
+        private void ShowMoreActivitiesButton_Click(object sender, RoutedEventArgs e)
+        {
+            // This shows all activities instead of just the initial 10 (removed logging as it clutters the log)
+            _activitiesShownInTab = -1; // -1 means show all
+            RefreshActivityLogDisplay();
+            
+            // This updates the button text to indicate all are shown
+            ShowMoreActivitiesButton.Content = "📋 Showing All Activities";
+            ShowMoreActivitiesButton.IsEnabled = false;
+        }
+        
+        /// <summary>
+        /// Handles the Clear Activity Log button click event (PHASE 4 ADDITION)
+        /// </summary>
+        private void ClearActivityLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            // This confirms the action with the user
+            var result = MessageBox.Show("Are you sure you want to clear all activity logs? This action cannot be undone.", 
+                                         "Clear Activity Log", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
+            {
+                // This clears all activities
+                _activityLogger?.ClearAllActivities();
+                
+                // This resets the "Show More" button
+                _activitiesShownInTab = 10;
+                ShowMoreActivitiesButton.Content = "📋 Show All Activities";
+                ShowMoreActivitiesButton.IsEnabled = true;
+                
+                // This refreshes the display to show empty state
+                RefreshActivityLogDisplay();
+                
+                // This provides feedback to the user
+                MessageBox.Show("All activity logs have been cleared.", "Activity Log Cleared", 
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        
+        /// <summary>
+        /// Refreshes the activity log display in the Activity Log tab (PHASE 4 ADDITION)
+        /// </summary>
+        private void RefreshActivityLogDisplay()
+        {
+            if (_activityLogger == null) return;
+            
+            // This gets the activities to display
+            var activities = _activitiesShownInTab == -1 ? 
+                _activityLogger.GetAllActivities() : 
+                _activityLogger.GetRecentActivities(_activitiesShownInTab);
+            
+            // This updates the summary information
+            ActivityCountText.Text = $"Total Activities: {_activityLogger.GetActivityCount()}";
+            
+            if (activities.Count > 0)
+            {
+                LastActivityText.Text = $"Last Activity: {activities[0].FormattedTimestamp}";
+            }
+            else
+            {
+                LastActivityText.Text = "Last Activity: None";
+            }
+            
+            // This shows or hides the appropriate panels
+            if (activities.Count == 0)
+            {
+                NoActivitiesPanel.Visibility = Visibility.Visible;
+                ActivityItemsControl.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                NoActivitiesPanel.Visibility = Visibility.Collapsed;
+                ActivityItemsControl.Visibility = Visibility.Visible;
+                ActivityItemsControl.ItemsSource = activities;
+            }
+            
+            // This updates the "Show More" button visibility
+            bool hasMoreActivities = _activityLogger.GetActivityCount() > _activitiesShownInTab && _activitiesShownInTab != -1;
+            ShowMoreActivitiesButton.IsEnabled = hasMoreActivities;
+            
+            if (_activitiesShownInTab == -1)
+            {
+                ShowMoreActivitiesButton.Content = "📋 Showing All Activities";
+                ShowMoreActivitiesButton.IsEnabled = false;
+            }
+            else if (hasMoreActivities)
+            {
+                ShowMoreActivitiesButton.Content = "📋 Show All Activities";
+                ShowMoreActivitiesButton.IsEnabled = true;
+            }
+            else
+            {
+                ShowMoreActivitiesButton.Content = "📋 All Activities Shown";
+                ShowMoreActivitiesButton.IsEnabled = false;
+            }
+        }
+        
+        /// <summary>
+        /// Processes quiz completion and shows results
+        /// </summary>
+        private void ProcessQuizCompletion()
+        {
+            // This calculates the final score
+            int score = _quizManager.Score;
+            int totalQuestions = _quizManager.TotalQuestions;
+            double percentage = (double)score / totalQuestions * 100;
+            
+            // PHASE 4 ADDITION: This logs the quiz completion activity with detailed score
+            _activityLogger?.LogQuizActivity("completed", $"Score: {score}/{totalQuestions} ({percentage:F1}%)");
+            
+            // This updates the UI to show results
+            QuizQuestionPanel.Visibility = Visibility.Collapsed;
+            QuizResultsPanel.Visibility = Visibility.Visible;
+            
+            // This displays the final score
+            ScoreText.Text = $"Final Score: {score} out of {totalQuestions} ({percentage:F1}%)";
+            
+            // This provides feedback based on performance
+            string feedbackMessage;
+            if (percentage >= 80)
+            {
+                feedbackMessage = "Excellent! You have a strong understanding of cybersecurity concepts.";
+                FeedbackText.Foreground = Brushes.LightGreen;
+            }
+            else if (percentage >= 60)
+            {
+                feedbackMessage = "Good job! You have a solid foundation, but there's room for improvement.";
+                FeedbackText.Foreground = Brushes.Orange;
+            }
+            else
+            {
+                feedbackMessage = "Keep learning! Consider reviewing cybersecurity topics and try again.";
+                FeedbackText.Foreground = Brushes.LightCoral;
+            }
+            
+            FeedbackText.Text = feedbackMessage;
+            
+            // PHASE 4 ADDITION: This auto-refreshes the activity log display
+            RefreshActivityLogDisplay();
+        }
+        
         #endregion
     }
-} 
+}
+
+//---------------------------------------------------------End of File---------------------------------------------------------- 

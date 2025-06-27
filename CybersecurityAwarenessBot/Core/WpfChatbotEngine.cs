@@ -1,5 +1,9 @@
 using System;
 using CybersecurityAwarenessBot.Data;
+using CybersecurityAwarenessBot.UI;
+using CybersecurityAwarenessBot.Audio;
+
+//--------------------------------------------------------------------------------------------------------------------------------
 
 namespace CybersecurityAwarenessBot.Core
 {
@@ -112,5 +116,16 @@ namespace CybersecurityAwarenessBot.Core
             _responseDb.ResetPostFollowUpState();
             _responseDb.ClearTopicHistory();
         }
+        
+        /// <summary>
+        /// Gets the activity logger instance (PHASE 4 ADDITION)
+        /// </summary>
+        /// <returns>The activity logger</returns>
+        public ActivityLogger GetActivityLogger()
+        {
+            return _responseDb.GetActivityLogger();
+        }
     }
-} 
+}
+
+//----------------------------------------------------End of File---------------------------------------------------- 

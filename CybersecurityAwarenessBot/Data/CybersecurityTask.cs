@@ -1,5 +1,7 @@
 using System;
 
+//------------------------------------------------------------------------------------------------------------------------
+
 namespace CybersecurityAwarenessBot.Data
 {
     /// <summary>
@@ -91,4 +93,6 @@ namespace CybersecurityAwarenessBot.Data
             IsCompleted = false;
         }
     }
-} 
+}
+
+//--------------------------------------------------End of File--------------------------------------------------

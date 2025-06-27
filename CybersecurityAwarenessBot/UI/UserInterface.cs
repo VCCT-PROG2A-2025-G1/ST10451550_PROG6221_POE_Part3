@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
 
+//------------------------------------------------------------------------------------------------------------------------
+
 namespace CybersecurityAwarenessBot.UI
 {
     /// <summary>
@@ -216,4 +218,6 @@ namespace CybersecurityAwarenessBot.UI
             DisplayTextInstantly($"Error: {message}", ConsoleColor.Red);
         }
     }
-} 
+}
+
+//--------------------------------------------------End of File--------------------------------------------------
